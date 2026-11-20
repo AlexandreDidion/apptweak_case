@@ -57,8 +57,14 @@ You will need a Spotify API key for this project. If you already have a personal
 To get started, here are the instructions you need to follow:
 
 1. In the Spotify developer dashboard, create a new Application: https://developer.spotify.com/dashboard
-2. Copy your Client ID into the environment variable (`REACT_APP_SPOTIFY_CLIENT_ID`) to a file named `.env.local` in the project’s root. We created the boilerplate with [Create React App](https://github.com/facebook/create-react-app) which uses [dotenv](https://www.npmjs.com/package/dotenv) to load these additional environment variables into your app.
-3. Don’t forget to set up the redirect URI in your app settings on the Spotify developer dashboard.
+2. Copy your Client ID into the environment variable `VITE_SPOTIFY_CLIENT_ID` in a file named `.env.local` in the project’s root:
+
+   ```
+   VITE_SPOTIFY_CLIENT_ID=your-client-id
+   ```
+
+   [Vite](https://vite.dev/guide/env-and-mode) loads `.env` files automatically and only exposes variables prefixed with `VITE_` to the app (through `import.meta.env`).
+3. Don’t forget to set up the redirect URI in your app settings on the Spotify developer dashboard: `http://127.0.0.1:3000`. Spotify does not accept `localhost` redirect URIs, which is why the dev server listens on `127.0.0.1` (configured through `HOST` in `.env`).
 
 This boilerplate is already set up to authenticate to the Spotify API using the "Authorization Code with PKCE" flow. You are welcome to make changes to the auth code (nothing is off-bounds!), but it should in principle work fine without your intervention.
 
@@ -80,16 +86,23 @@ The wireframes will be sent separately.
 
 ## How to run this project?
 
-The project uses Yarn Classic as its package manager. We recommend setting it up through corepack. In recent Node.js releases, corepack itself must be installed first with `npm install -g corepack`. Then, run `corepack enable` to make Yarn available, and run `yarn` to install dependencies.
+The project uses [pnpm](https://pnpm.io) as its package manager. The exact version is pinned in the `packageManager` field of `package.json`, so we recommend setting it up through corepack. In recent Node.js releases, corepack itself must be installed first with `npm install -g corepack`. Then, run `corepack enable` to make pnpm available, and run `pnpm install` to install dependencies. The Node.js version is pinned in `.nvmrc` (run `nvm use`).
 
-In the project directory, you can then run
+The app is built with [Vite](https://vite.dev), tested with [Vitest](https://vitest.dev) and linted with [ESLint](https://eslint.org).
 
-### `yarn start`
+In the project directory, you can run:
 
-which runs the app in the development mode.
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+| Command | Description |
+| --- | --- |
+| `pnpm start` | Runs the app in development mode on [http://127.0.0.1:3000](http://127.0.0.1:3000), with hot reload. |
+| `pnpm build` | Type-checks the project, then builds it for production into `dist/`. |
+| `pnpm preview` | Serves the production build locally. |
+| `pnpm test` | Runs the tests with Vitest in watch mode (`pnpm test --run` for a single run). |
+| `pnpm lint` | Lints the code with ESLint. |
+| `pnpm typecheck` | Type-checks the project with `tsc`. |
+| `pnpm format` | Formats the source files with Prettier. |
+| `pnpm safe` | Fixes vulnerable dependencies with `pnpm audit --fix`. |
 
-The page will reload if you make edits.
-You will also see any lint errors in the console.
+### About TypeScript versions
 
-The React app is built and run using Create React App. You can learn more about it in the [Create React App documentation](https://create-react-app.dev/docs/getting-started/).
+Type checking uses TypeScript 7 (the native compiler), installed as `@typescript/native` and run via `tsc`. TypeScript 7 does not ship a programmatic API yet, so the `typescript` package is aliased to `@typescript/typescript6` for tools that import it directly, such as `typescript-eslint`. See [Running side-by-side with TypeScript 6.0](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6.0).

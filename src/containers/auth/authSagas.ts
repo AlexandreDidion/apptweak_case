@@ -11,7 +11,7 @@ import {
   ForkEffect,
   ActionPattern,
   delay
-} from "@redux-saga/core/effects";
+} from "redux-saga/effects";
 
 import { selectAccessToken } from "./selectors";
 import {
@@ -73,8 +73,8 @@ function* loginSaga(): SagaIterator {
     yield put(getTokenSuccess(localStorageAccessToken));
     return;
   }
-  const { REACT_APP_SPOTIFY_CLIENT_ID } = process.env;
-  if (!REACT_APP_SPOTIFY_CLIENT_ID) {
+  const { VITE_SPOTIFY_CLIENT_ID } = import.meta.env;
+  if (!VITE_SPOTIFY_CLIENT_ID) {
     throw new Error("Missing Spotify Client ID");
   }
   const scope: string = SPOTIFY_SCOPE.join(",");
@@ -88,7 +88,7 @@ function* loginSaga(): SagaIterator {
   const codeChallenge = base64encode(hashed);
   const params = {
     response_type: "code",
-    client_id: REACT_APP_SPOTIFY_CLIENT_ID,
+    client_id: VITE_SPOTIFY_CLIENT_ID,
     scope,
     code_challenge_method: "S256",
     code_challenge: codeChallenge,
@@ -100,9 +100,9 @@ function* loginSaga(): SagaIterator {
 
 function* getTokenSaga(action: ReturnType<typeof getToken>): SagaIterator {
   const code = action.payload;
-  const { REACT_APP_SPOTIFY_CLIENT_ID } = process.env;
+  const { VITE_SPOTIFY_CLIENT_ID } = import.meta.env;
   const getToken = (): Promise<AxiosResponse<TokenResponse>> => {
-    if (!REACT_APP_SPOTIFY_CLIENT_ID) {
+    if (!VITE_SPOTIFY_CLIENT_ID) {
       throw new Error("Missing Spotify Client ID");
     }
 
@@ -117,7 +117,7 @@ function* getTokenSaga(action: ReturnType<typeof getToken>): SagaIterator {
     return axios.post<TokenResponse>(
       url,
       new URLSearchParams({
-        client_id: REACT_APP_SPOTIFY_CLIENT_ID,
+        client_id: VITE_SPOTIFY_CLIENT_ID,
         grant_type: "authorization_code",
         code,
         redirect_uri: REDIRECT_URI,
@@ -154,7 +154,7 @@ function* getTokenSaga(action: ReturnType<typeof getToken>): SagaIterator {
 }
 
 function* refreshToken() {
-  const { REACT_APP_SPOTIFY_CLIENT_ID } = process.env;
+  const { VITE_SPOTIFY_CLIENT_ID } = import.meta.env;
   const refreshToken = localStorage.getItem(refreshTokenStorageKey) ?? "";
   const refreshTokenCall = () => {
     return axios.post<TokenResponse>(
@@ -162,7 +162,7 @@ function* refreshToken() {
       new URLSearchParams({
         grant_type: "refresh_token",
         refresh_token: refreshToken,
-        client_id: REACT_APP_SPOTIFY_CLIENT_ID!
+        client_id: VITE_SPOTIFY_CLIENT_ID!
       }),
       {
         headers: {

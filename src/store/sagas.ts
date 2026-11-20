@@ -1,4 +1,4 @@
-import { all } from "@redux-saga/core/effects";
+import { all } from "redux-saga/effects";
 
 import authSaga from "../containers/auth/authSagas";
 
