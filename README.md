@@ -94,7 +94,7 @@ In the project directory, you can run:
 
 | Command | Description |
 | --- | --- |
-| `pnpm start` | Runs the app in development mode on [http://127.0.0.1:3000](http://127.0.0.1:3000), with hot reload. |
+| `pnpm start` | Runs the app in development mode and opens [http://127.0.0.1:3000](http://127.0.0.1:3000) in your browser, with hot reload. |
 | `pnpm build` | Type-checks the project, then builds it for production into `dist/`. |
 | `pnpm preview` | Serves the production build locally. |
 | `pnpm test` | Runs the tests with Vitest in watch mode (`pnpm test --run` for a single run). |

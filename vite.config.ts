@@ -11,7 +11,9 @@ export default defineConfig(({ mode }) => {
     server: {
       host: HOST || "127.0.0.1",
       port: 3000,
-      strictPort: true
+      strictPort: true,
+      // opens http://<host>:3000, so the Spotify redirect URI matches
+      open: true
     },
     test: {
       environment: "jsdom",
