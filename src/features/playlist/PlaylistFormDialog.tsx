@@ -10,8 +10,16 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 import {
@@ -27,6 +35,8 @@ interface PlaylistFormProps {
   defaultValues?: PlaylistFormValues;
   submitLabel: string;
   onSubmit: (values: PlaylistFormValues) => void;
+  isSubmitting?: boolean;
+  submitError?: string;
 }
 
 interface PlaylistFormDialogProps extends PlaylistFormProps {
@@ -59,7 +69,9 @@ export function PlaylistFormDialog({
 function PlaylistForm({
   defaultValues = emptyPlaylistFormValues,
   submitLabel,
-  onSubmit
+  onSubmit,
+  isSubmitting = false,
+  submitError
 }: PlaylistFormProps) {
   const form = useForm({
     defaultValues,
@@ -129,13 +141,37 @@ function PlaylistForm({
               );
             }}
           </form.Field>
+
+          <form.Field name="isPublic">
+            {(field) => (
+              <Field orientation="horizontal">
+                <FieldContent>
+                  <FieldLabel htmlFor={field.name}>Public</FieldLabel>
+                  <FieldDescription>
+                    {field.state.value
+                      ? "Anyone can see this playlist on your profile."
+                      : "Only you can see this playlist."}
+                  </FieldDescription>
+                </FieldContent>
+                <Switch
+                  id={field.name}
+                  name={field.name}
+                  checked={field.state.value}
+                  onCheckedChange={(checked) => {
+                    field.handleChange(checked);
+                  }}
+                />
+              </Field>
+            )}
+          </form.Field>
         </FieldGroup>
+        {submitError && <FieldError className="mt-4">{submitError}</FieldError>}
       </form>
 
       <DialogFooter>
         <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
         {/* Outside the <form>, linked through its id */}
-        <Button type="submit" form={FORM_ID}>
+        <Button type="submit" form={FORM_ID} isLoading={isSubmitting}>
           {submitLabel}
         </Button>
       </DialogFooter>

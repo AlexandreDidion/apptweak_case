@@ -20,7 +20,9 @@ export default defineConfig([
     plugins: { "simple-import-sort": simpleImportSort },
     rules: {
       "simple-import-sort/imports": "error",
-      "simple-import-sort/exports": "error"
+      "simple-import-sort/exports": "error",
+      // No debug logs left behind; console.warn and console.error stay for real problems
+      "no-console": ["error", { allow: ["warn", "error"] }]
     }
   },
   {

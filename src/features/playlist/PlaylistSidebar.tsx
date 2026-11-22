@@ -14,11 +14,12 @@ import {
   SidebarMenuSkeleton,
   SidebarRail
 } from "@/components/ui/sidebar";
+import { useReduxMutation } from "@/store/useReduxMutation";
 import { useReduxQuery } from "@/store/useReduxQuery";
 
 import { PlaylistFormDialog } from "./PlaylistFormDialog";
-import { selectPlaylists, selectPlaylistState } from "./selectors";
-import { getPlaylists } from "./slice";
+import { selectCreatePlaylistRequest, selectPlaylists, selectPlaylistState } from "./selectors";
+import { createPlaylist, getPlaylists } from "./slice";
 
 export function PlaylistSidebar() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -31,6 +32,14 @@ export function PlaylistSidebar() {
     action: getPlaylists,
     selectData: selectPlaylists,
     selectState: selectPlaylistState
+  });
+
+  const createMutation = useReduxMutation({
+    action: createPlaylist,
+    selectState: selectCreatePlaylistRequest,
+    onSuccess: () => {
+      setIsCreateDialogOpen(false);
+    }
   });
 
   return (
@@ -93,9 +102,9 @@ export function PlaylistSidebar() {
         title="Create a playlist"
         description="Give it a name, and optionally a description."
         submitLabel="Create"
-        onSubmit={() => {
-          // TODO: dispatch createPlaylist(values) and close the dialog on success
-        }}
+        onSubmit={createMutation.mutate}
+        isSubmitting={createMutation.isPending}
+        submitError={createMutation.isError ? createMutation.error : undefined}
       />
     </>
   );
