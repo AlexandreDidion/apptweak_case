@@ -1,10 +1,5 @@
 import { SagaIterator } from "redux-saga";
-import {
-  call,
-  put,
-  SagaReturnType,
-  takeLatest
-} from "redux-saga/effects";
+import { call, put, SagaReturnType, takeLatest } from "redux-saga/effects";
 
 import { spotifyClient } from "@/lib/spotifyClient";
 
