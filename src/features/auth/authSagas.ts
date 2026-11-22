@@ -8,13 +8,17 @@ import {
   ForkEffect,
   put,
   SagaReturnType,
-  select,
   take,
   takeEvery,
   takeLatest
 } from "redux-saga/effects";
 
-import { selectAccessToken } from "./selectors";
+import {
+  ACCESS_TOKEN_STORAGE_KEY,
+  EXPIRES_AT_STORAGE_KEY,
+  REFRESH_TOKEN_STORAGE_KEY} from "@/lib/constants";
+import { spotifyClient } from "@/lib/spotifyClient";
+
 import {
   getToken,
   getTokenFailed,
@@ -25,12 +29,9 @@ import {
   login
 } from "./slice";
 import {
-  accessTokenStorageKey,
   base64encode,
-  expiresAtStorageKey,
   generateRandomString,
   REDIRECT_URI,
-  refreshTokenStorageKey,
   sha256,
   SPOTIFY_SCOPE,
   storeToken,
@@ -48,22 +49,9 @@ export function takeOne<A extends { type: string }, Args extends unknown[]>(
   });
 }
 
-interface SpotifyUserResponse {
-  id: string;
-  display_name: string;
-}
-
 function* getUserIdSaga(): SagaIterator {
-  const accessToken = (yield select(selectAccessToken)) as SagaReturnType<typeof selectAccessToken>;
-  if (!accessToken) {
-    yield put(getUserFailed({ message: "No access token" }));
-    return;
-  }
   try {
-    const request = () =>
-      axios.get<SpotifyUserResponse>("https://api.spotify.com/v1/me", {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
+    const request = () => spotifyClient.get<SpotifyApi.CurrentUsersProfileResponse>("/me");
     const { data } = (yield call(request)) as SagaReturnType<typeof request>;
 
     yield put(getUserSuccess({ userId: data.id, userName: data.display_name }));
@@ -73,7 +61,7 @@ function* getUserIdSaga(): SagaIterator {
 }
 
 function* loginSaga(): SagaIterator {
-  const localStorageAccessToken = localStorage.getItem(accessTokenStorageKey);
+  const localStorageAccessToken = localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
   if (localStorageAccessToken) {
     yield put(getTokenSuccess(localStorageAccessToken));
     return;
@@ -157,14 +145,17 @@ function* getTokenSaga(action: ReturnType<typeof getToken>): SagaIterator {
     const spotifyError = axios.isAxiosError<{ error?: string }>(e)
       ? e.response?.data.error
       : undefined;
-    yield put(getTokenFailed(spotifyError ?? String(e)));
+    yield put(getTokenFailed({ message: spotifyError ?? String(e) }));
     console.error("Error getting token", e);
   }
 }
 
-function* refreshToken(): SagaIterator {
+/**
+ * Returns whether the refresh succeeded
+ */
+function* refreshToken(): SagaIterator<boolean> {
   const { VITE_SPOTIFY_CLIENT_ID } = import.meta.env;
-  const refreshToken = localStorage.getItem(refreshTokenStorageKey) ?? "";
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY) ?? "";
   const refreshTokenCall = () => {
     if (!VITE_SPOTIFY_CLIENT_ID) {
       throw new Error("Missing Spotify Client ID");
@@ -189,8 +180,18 @@ function* refreshToken(): SagaIterator {
 
     // Store the access token and refresh token in local storage
     storeToken(data);
+    return true;
   } catch (e) {
-    console.error("Error refreshing token", e);
+    // e.g. { error: "invalid_grant" } when the refresh token was revoked or already used
+    const spotifyError = axios.isAxiosError(e) ? (e.response?.data as unknown) : undefined;
+    console.error("Error refreshing token", spotifyError ?? e);
+
+    // The refresh token can't be used anymore: start a new login
+    localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(EXPIRES_AT_STORAGE_KEY);
+    yield put(login());
+    return false;
   }
 }
 
@@ -199,11 +200,13 @@ function* refreshToken(): SagaIterator {
  */
 function* periodicRefreshToken() {
   while (true) {
-    const tokenExpiry = parseInt(localStorage.getItem(expiresAtStorageKey) ?? "0");
+    const tokenExpiry = parseInt(localStorage.getItem(EXPIRES_AT_STORAGE_KEY) ?? "0");
     const now = Math.floor(Date.now() / 1000);
     const bufferTime = 60; // 1 minute buffer time
     yield delay(Math.max(0, (tokenExpiry - now - bufferTime) * 1000));
-    yield call(refreshToken);
+    const refreshed = (yield call(refreshToken)) as boolean;
+    // Stop on failure, otherwise the expired token makes this loop retry immediately
+    if (!refreshed) return;
   }
 }
 

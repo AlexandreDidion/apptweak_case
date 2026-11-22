@@ -1,17 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { ErrorPayload, RequestStatus } from "../../types/requests";
+import { setFailed, setPending, setSuccess } from "@/store/commonReducers";
+import { CommonReduxState } from "@/types/redux";
+import { RequestStatus } from "@/types/requests";
 
 export interface User {
   userId?: string;
   userName?: string;
 }
 
-export interface AuthState {
+export interface AuthState extends CommonReduxState {
   accessToken?: string;
   user?: User;
-  status: RequestStatus;
-  error?: string;
 }
 
 const initialState: AuthState = {
@@ -22,31 +22,23 @@ const authSlice = createSlice({
   name: "authentication",
   initialState,
   reducers: {
-    getUser: (state) => {
-      state.status = RequestStatus.PENDING;
-    },
+    getUser: setPending,
     getUserSuccess: (state, action: PayloadAction<User>) => {
-      state.status = RequestStatus.SUCCESS;
+      setSuccess(state);
       state.user = action.payload;
     },
-    getUserFailed: (state, action: PayloadAction<ErrorPayload>) => {
-      state.status = RequestStatus.ERROR;
-      state.error = action.payload.message;
-    },
+    getUserFailed: setFailed,
     setAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
     },
     getToken: (state, _action: PayloadAction<string>) => {
-      state.status = RequestStatus.PENDING;
+      setPending(state);
     },
     getTokenSuccess: (state, action: PayloadAction<string>) => {
-      state.status = RequestStatus.SUCCESS;
+      setSuccess(state);
       state.accessToken = action.payload;
     },
-    getTokenFailed: (state, action: PayloadAction<string>) => {
-      state.status = RequestStatus.ERROR;
-      state.error = action.payload;
-    },
+    getTokenFailed: setFailed,
     login: () => {
       // only used in sagas
     }

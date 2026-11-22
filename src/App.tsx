@@ -2,9 +2,9 @@ import "./App.css";
 
 import { FC, ReactElement } from "react";
 import { useSelector } from "react-redux";
+import { PlaylistList } from "./features/playlist/PlaylistList";
 
 import { selectUser } from "./features/auth/selectors";
-import logo from "./logo.svg";
 
 const App: FC = (): ReactElement => {
   const user = useSelector(selectUser);
@@ -15,18 +15,8 @@ const App: FC = (): ReactElement => {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        {user && <p>Welcome, {user?.userName}</p>}
+        <PlaylistList />
       </header>
     </div>
   );

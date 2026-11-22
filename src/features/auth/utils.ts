@@ -1,3 +1,5 @@
+import { ACCESS_TOKEN_STORAGE_KEY, REFRESH_TOKEN_STORAGE_KEY, EXPIRES_AT_STORAGE_KEY } from "@/lib/constants";
+
 /**
  * List of the Spotify API scopes that are used in the app.
  * Please refer to the Spotify API documentation for more information.
@@ -48,15 +50,11 @@ export interface TokenResponse {
   refresh_token: string;
 }
 
-export const accessTokenStorageKey = "access_token";
-export const refreshTokenStorageKey = "refresh_token";
-export const expiresAtStorageKey = "expires_at";
-
 /**
  * Store the access token and refresh token in local storage
  */
 export const storeToken = (token: TokenResponse) => {
-  localStorage.setItem(accessTokenStorageKey, token.access_token);
-  localStorage.setItem(refreshTokenStorageKey, token.refresh_token);
-  localStorage.setItem(expiresAtStorageKey, (Date.now() / 1000 + token.expires_in).toString());
+  localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, token.access_token);
+  localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, token.refresh_token);
+  localStorage.setItem(EXPIRES_AT_STORAGE_KEY, (Date.now() / 1000 + token.expires_in).toString());
 };
