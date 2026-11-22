@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "typecheck": "tsc",
     "safe": "pnpm audit --fix && pnpm install",
-    "format": "prettier --write 'src/**/*.{ts,tsx}'"
+    "format": "prettier --write 'src/**/*.{ts,tsx}' *.{js,ts}",
+    "format:check": "prettier --check 'src/**/*.{ts,tsx}' *.{js,ts}"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
@@ -22,6 +23,7 @@
     "redux-saga": "^1.2.3"
   },
   "devDependencies": {
+    "@eslint-react/eslint-plugin": "^5.30.5",
     "@eslint/js": "^10.0.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^8",
@@ -32,9 +34,14 @@
     "@types/react-dom": "^19",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitejs/plugin-react": "^6.3.0",
+    "@vitest/eslint-plugin": "^1.6.28",
     "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.8",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
+    "eslint-plugin-testing-library": "^7.16.2",
     "globals": "^17.14.0",
     "jsdom": "^31.0.1",
     "prettier": "^3.1.0",

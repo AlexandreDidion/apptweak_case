@@ -8,7 +8,11 @@ import App from "./App";
 import AuthProvider from "./containers/auth";
 import { setupStore } from "./store/store";
 
-const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
+const container = document.getElementById("root");
+if (!container) {
+  throw new Error("Root element #root not found");
+}
+const root = ReactDOM.createRoot(container);
 
 const store = setupStore();
 

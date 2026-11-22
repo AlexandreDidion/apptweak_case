@@ -98,10 +98,22 @@ In the project directory, you can run:
 | `pnpm build` | Type-checks the project, then builds it for production into `dist/`. |
 | `pnpm preview` | Serves the production build locally. |
 | `pnpm test` | Runs the tests with Vitest in watch mode (`pnpm test --run` for a single run). |
-| `pnpm lint` | Lints the code with ESLint. |
+| `pnpm lint` | Lints the code with ESLint (`pnpm lint --fix` to auto-fix). |
 | `pnpm typecheck` | Type-checks the project with `tsc`. |
 | `pnpm format` | Formats the source files with Prettier. |
+| `pnpm format:check` | Checks formatting without writing changes. |
 | `pnpm safe` | Fixes vulnerable dependencies with `pnpm audit --fix`. |
+
+### Linting
+
+ESLint (`eslint.config.js`) combines:
+
+* `typescript-eslint` **strict** and **stylistic** presets with type information (catches unsafe `any`, floating promises, unnecessary conditions, …),
+* `@eslint-react` (strict) and `eslint-plugin-react-hooks` for React and Hooks best practices,
+* `eslint-plugin-jsx-a11y` for accessibility,
+* `eslint-plugin-simple-import-sort` for consistent import ordering,
+* `@vitest/eslint-plugin` and `eslint-plugin-testing-library` for test files,
+* `eslint-config-prettier`, so that formatting is left entirely to Prettier.
 
 ### About TypeScript versions
 

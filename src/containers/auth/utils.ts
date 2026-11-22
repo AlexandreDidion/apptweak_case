@@ -42,7 +42,11 @@ export const base64encode = (input: ArrayBufferLike) => {
 
 export const REDIRECT_URI = window.location.origin;
 
-export type TokenResponse = { access_token: string; expires_in: number; refresh_token: string };
+export interface TokenResponse {
+  access_token: string;
+  expires_in: number;
+  refresh_token: string;
+}
 
 export const accessTokenStorageKey = "access_token";
 export const refreshTokenStorageKey = "refresh_token";

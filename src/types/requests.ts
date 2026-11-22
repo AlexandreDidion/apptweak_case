@@ -5,9 +5,9 @@ export enum RequestStatus {
   ERROR = "error"
 }
 
-export type ErrorPayload = {
+export interface ErrorPayload {
   message: string;
-};
+}
 
 export interface AxiosOptions {
   accessToken?: string;

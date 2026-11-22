@@ -1,15 +1,17 @@
-import React from "react";
 import { render, screen } from "@testing-library/react";
-import App from "./App";
+import React from "react";
 import { Provider } from "react-redux";
-import { AppStore, setupStore } from "./store/store";
 import { END } from "redux-saga";
+
+import App from "./App";
+import { AppStore, setupStore } from "./store/store";
 
 // resilient to strict mode
 function StoreProvider({ children }: React.PropsWithChildren) {
   const [store, setStore] = React.useState<AppStore | undefined>();
   React.useEffect(() => {
     const store = setupStore();
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
     setStore(store);
     // shuts down sagas on dismount
     return () => {

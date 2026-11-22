@@ -1,16 +1,17 @@
-import axios, { AxiosResponse } from "axios";
-
+import axios from "axios";
+import { SagaIterator } from "redux-saga";
 import {
+  ActionPattern,
   call,
-  put,
-  select,
-  takeEvery,
-  takeLatest,
-  take,
+  delay,
   fork,
   ForkEffect,
-  ActionPattern,
-  delay
+  put,
+  SagaReturnType,
+  select,
+  take,
+  takeEvery,
+  takeLatest
 } from "redux-saga/effects";
 
 import { selectAccessToken } from "./selectors";
@@ -35,35 +36,39 @@ import {
   storeToken,
   TokenResponse
 } from "./utils";
-import { SagaIterator } from "redux-saga";
 
-export function takeOne<A extends { type: string }>(
+export function takeOne<A extends { type: string }, Args extends unknown[]>(
   pattern: ActionPattern<A>,
-  saga: (action: A, ...args: any[]) => Generator | SagaIterator,
-  ...args: any[]
+  saga: (action: A, ...args: Args) => SagaIterator,
+  ...args: Args
 ): ForkEffect {
-  return fork(function* () {
-    const action: A = yield take(pattern);
+  return fork(function* (): SagaIterator {
+    const action = (yield take(pattern)) as A;
     yield fork(saga, action, ...args);
   });
 }
 
-function* getUserIdSaga() {
-  const accessToken: string = yield select(selectAccessToken);
+interface SpotifyUserResponse {
+  id: string;
+  display_name: string;
+}
+
+function* getUserIdSaga(): SagaIterator {
+  const accessToken = (yield select(selectAccessToken)) as SagaReturnType<typeof selectAccessToken>;
   if (!accessToken) {
     yield put(getUserFailed({ message: "No access token" }));
     return;
   }
   try {
     const request = () =>
-      axios.get<any>("https://api.spotify.com/v1/me", {
+      axios.get<SpotifyUserResponse>("https://api.spotify.com/v1/me", {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-    const { data } = yield call(request);
+    const { data } = (yield call(request)) as SagaReturnType<typeof request>;
 
     yield put(getUserSuccess({ userId: data.id, userName: data.display_name }));
-  } catch (error: any) {
-    yield put(getUserFailed({ message: error.message }));
+  } catch (error) {
+    yield put(getUserFailed({ message: error instanceof Error ? error.message : String(error) }));
   }
 }
 
@@ -84,7 +89,7 @@ function* loginSaga(): SagaIterator {
   const codeVerifier = generateRandomString(64);
   window.localStorage.setItem("code_verifier", codeVerifier);
 
-  const hashed: ArrayBuffer = yield call(sha256, codeVerifier);
+  const hashed = (yield call(sha256, codeVerifier)) as SagaReturnType<typeof sha256>;
   const codeChallenge = base64encode(hashed);
   const params = {
     response_type: "code",
@@ -101,7 +106,7 @@ function* loginSaga(): SagaIterator {
 function* getTokenSaga(action: ReturnType<typeof getToken>): SagaIterator {
   const code = action.payload;
   const { VITE_SPOTIFY_CLIENT_ID } = import.meta.env;
-  const getToken = (): Promise<AxiosResponse<TokenResponse>> => {
+  const getToken = () => {
     if (!VITE_SPOTIFY_CLIENT_ID) {
       throw new Error("Missing Spotify Client ID");
     }
@@ -132,7 +137,7 @@ function* getTokenSaga(action: ReturnType<typeof getToken>): SagaIterator {
   };
 
   try {
-    const { data }: AxiosResponse<TokenResponse> = yield call(getToken);
+    const { data } = (yield call(getToken)) as SagaReturnType<typeof getToken>;
 
     // Store the access token and refresh token in local storage
     storeToken(data);
@@ -140,29 +145,37 @@ function* getTokenSaga(action: ReturnType<typeof getToken>): SagaIterator {
     // Remove the code from the URL
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.delete("code");
-    window.history.replaceState({}, "", "?" + urlParams);
+    window.history.replaceState({}, "", `?${urlParams.toString()}`);
 
     // Remove the code verifier from local storage
     localStorage.removeItem("code_verifier");
 
     // Store the access token in the Redux store to be used by any request
     yield put(getTokenSuccess(data.access_token));
-  } catch (e: string | { response: { data: { error: string } } } | any) {
-    yield put(getTokenFailed(typeof e === "string" ? e : e?.response?.data?.error));
-    console.error("Error getting token", e.toString());
+  } catch (e) {
+    // Spotify returns { error: string } in the response body on failure
+    const spotifyError = axios.isAxiosError<{ error?: string }>(e)
+      ? e.response?.data.error
+      : undefined;
+    yield put(getTokenFailed(spotifyError ?? String(e)));
+    console.error("Error getting token", e);
   }
 }
 
-function* refreshToken() {
+function* refreshToken(): SagaIterator {
   const { VITE_SPOTIFY_CLIENT_ID } = import.meta.env;
   const refreshToken = localStorage.getItem(refreshTokenStorageKey) ?? "";
   const refreshTokenCall = () => {
+    if (!VITE_SPOTIFY_CLIENT_ID) {
+      throw new Error("Missing Spotify Client ID");
+    }
+
     return axios.post<TokenResponse>(
       "https://accounts.spotify.com/api/token",
       new URLSearchParams({
         grant_type: "refresh_token",
         refresh_token: refreshToken,
-        client_id: VITE_SPOTIFY_CLIENT_ID!
+        client_id: VITE_SPOTIFY_CLIENT_ID
       }),
       {
         headers: {
@@ -172,7 +185,7 @@ function* refreshToken() {
     );
   };
   try {
-    const { data } = yield call(refreshTokenCall);
+    const { data } = (yield call(refreshTokenCall)) as SagaReturnType<typeof refreshTokenCall>;
 
     // Store the access token and refresh token in local storage
     storeToken(data);

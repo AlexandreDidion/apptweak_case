@@ -1,25 +1,66 @@
 import js from "@eslint/js";
+import eslintReact from "@eslint-react/eslint-plugin";
+import vitest from "@vitest/eslint-plugin";
+import { defineConfig, globalIgnores } from "eslint/config";
+import prettier from "eslint-config-prettier";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
+import testingLibrary from "eslint-plugin-testing-library";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
-  { ignores: ["dist"] },
+export default defineConfig([
+  globalIgnores(["dist"]),
+  {
+    files: ["**/*.{js,ts,tsx}"],
+    extends: [js.configs.recommended],
+    plugins: { "simple-import-sort": simpleImportSort },
+    rules: {
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error"
+    }
+  },
   {
     files: ["**/*.{ts,tsx}"],
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    extends: [
+      tseslint.configs.strictTypeChecked,
+      tseslint.configs.stylisticTypeChecked,
+      eslintReact.configs["strict-type-checked"],
+      reactHooks.configs.flat["recommended-latest"],
+      eslintReact.configs["disable-conflict-eslint-plugin-react-hooks"],
+      reactRefresh.configs.vite,
+      jsxA11y.flatConfigs.recommended
+    ],
     languageOptions: {
       ecmaVersion: 2022,
-      globals: globals.browser
-    },
-    plugins: {
-      "react-hooks": reactHooks,
-      "react-refresh": reactRefresh
+      globals: globals.browser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname
+      }
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }]
+      // `while (true)` is the idiomatic loop for long-running sagas
+      "@typescript-eslint/no-unnecessary-condition": [
+        "error",
+        { allowConstantLoopConditions: true }
+      ],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }
+      ]
     }
-  }
-);
+  },
+  {
+    files: ["vite.config.ts", "eslint.config.js"],
+    languageOptions: { globals: globals.node }
+  },
+  {
+    files: ["**/*.test.{ts,tsx}"],
+    extends: [vitest.configs.recommended, testingLibrary.configs["flat/react"]]
+  },
+  // Must stay last: turns off rules that conflict with Prettier
+  prettier
+]);

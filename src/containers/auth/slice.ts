@@ -36,7 +36,7 @@ const authSlice = createSlice({
     setAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
     },
-    getToken: (state, action: PayloadAction<string>) => {
+    getToken: (state, _action: PayloadAction<string>) => {
       state.status = RequestStatus.PENDING;
     },
     getTokenSuccess: (state, action: PayloadAction<string>) => {
