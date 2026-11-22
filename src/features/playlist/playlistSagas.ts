@@ -1,20 +1,14 @@
-import axios from "axios";
 import { SagaIterator } from "redux-saga";
 import {
-  ActionPattern,
   call,
-  delay,
-  fork,
-  ForkEffect,
   put,
   SagaReturnType,
-  select,
-  take,
-  takeEvery,
   takeLatest
 } from "redux-saga/effects";
-import { getPlaylistsFailed, getPlaylistsSuccess } from "./slice";
+
 import { spotifyClient } from "@/lib/spotifyClient";
+
+import { getPlaylistsFailed, getPlaylistsSuccess } from "./slice";
 import { getPlaylists } from "./slice";
 
 function* fetchPlaylists(): SagaIterator {
