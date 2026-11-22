@@ -29,7 +29,7 @@ const store = setupStore();
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      {/* The router renders inside AuthProvider: no page shows before auth succeeds */}
+      {/* No page shows before auth succeeds */}
       <AuthProvider>
         <RouterProvider router={router} />
       </AuthProvider>

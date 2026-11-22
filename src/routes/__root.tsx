@@ -1,17 +1,14 @@
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
-import { MainHeader } from "@/components/MainHeader";
+import { createRootRoute, Outlet } from "@tanstack/react-router";
 
-import { selectUser } from "@/features/auth/selectors";
-import { useAppSelector } from "@/store/hooks";
+import { MainHeader } from "@/components/MainHeader";
+import { UserAvatar } from "@/features/auth/UserAvatar";
 
 export const Route = createRootRoute({ component: RootLayout });
 
 function RootLayout() {
-  const user = useAppSelector(selectUser);
-
   return (
     <div>
-      <MainHeader />
+      <MainHeader userAvatar={<UserAvatar />} />
       <main className="h-full w-full px-8 py-4">
         <Outlet />
       </main>
