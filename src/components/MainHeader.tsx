@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { House, Search } from "lucide-react";
 import { ReactNode } from "react";
 
+import { ModeToggle } from "@/components/ModeToggle";
 import { buttonVariants } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,10 @@ export function MainHeader({ userAvatar }: MainHeaderProps) {
         </InputGroup>
       </div>
 
-      <div className="flex flex-1 items-center justify-end">{userAvatar}</div>
+      <div className="flex flex-1 items-center justify-end gap-2">
+        <ModeToggle />
+        {userAvatar}
+      </div>
     </header>
   );
 }

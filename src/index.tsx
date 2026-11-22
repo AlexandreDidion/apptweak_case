@@ -5,6 +5,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 
+import { ThemeProvider } from "./components/ThemeProvider";
 import AuthProvider from "./features/auth";
 import { routeTree } from "./routeTree.gen";
 import { setupStore } from "./store/store";
@@ -28,11 +29,13 @@ const store = setupStore();
 
 root.render(
   <React.StrictMode>
-    <Provider store={store}>
-      {/* No page shows before auth succeeds */}
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </Provider>
+    <ThemeProvider>
+      <Provider store={store}>
+        {/* No page shows before auth succeeds */}
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </Provider>
+    </ThemeProvider>
   </React.StrictMode>
 );
