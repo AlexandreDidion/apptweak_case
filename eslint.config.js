@@ -54,6 +54,11 @@ export default defineConfig([
     }
   },
   {
+    // shadcn components export variants (e.g. buttonVariants) next to the component
+    files: ["src/components/ui/**/*.tsx"],
+    rules: { "react-refresh/only-export-components": "off" }
+  },
+  {
     files: ["vite.config.ts", "eslint.config.js"],
     languageOptions: { globals: globals.node }
   },
