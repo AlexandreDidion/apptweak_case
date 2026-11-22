@@ -3,7 +3,7 @@ import "./App.css";
 import { FC, ReactElement } from "react";
 import { useSelector } from "react-redux";
 
-import { selectUser } from "./containers/auth/selectors";
+import { selectUser } from "./features/auth/selectors";
 import logo from "./logo.svg";
 
 const App: FC = (): ReactElement => {

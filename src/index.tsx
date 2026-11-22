@@ -5,7 +5,7 @@ import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 
 import App from "./App";
-import AuthProvider from "./containers/auth";
+import AuthProvider from "./features/auth";
 import { setupStore } from "./store/store";
 
 const container = document.getElementById("root");
