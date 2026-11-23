@@ -11,6 +11,7 @@ export interface PlaylistState extends CommonReduxState {
   playlist?: SpotifyApi.PlaylistObjectFull;
   createRequest: CommonReduxState;
   getRequest: CommonReduxState;
+  editRequest: CommonReduxState;
 }
 
 const initialState: PlaylistState = {
@@ -18,7 +19,8 @@ const initialState: PlaylistState = {
   playlists: [],
   playlist: undefined,
   createRequest: { status: RequestStatus.IDLE },
-  getRequest: { status: RequestStatus.IDLE }
+  getRequest: { status: RequestStatus.IDLE },
+  editRequest: { status: RequestStatus.IDLE }
 };
 
 const playlistSlice = createSlice({
@@ -41,6 +43,27 @@ const playlistSlice = createSlice({
     createPlaylistFailed: (state, action: PayloadAction<ErrorPayload>) => {
       setFailed(state.createRequest, action);
     },
+    editPlaylist: (
+      state,
+      _action: PayloadAction<{ playlistId: string; values: PlaylistFormValues }>
+    ) => {
+      setPending(state.editRequest);
+    },
+    editPlaylistSuccess: (
+      state,
+      action: PayloadAction<{ playlistId: string; values: PlaylistFormValues }>
+    ) => {
+      setSuccess(state.editRequest);
+      const { playlistId, values } = action.payload;
+
+      const listItem = state.playlists.find((playlist) => playlist.id === playlistId);
+      if (listItem) Object.assign(listItem, values);
+
+      if (state.playlist?.id === playlistId) Object.assign(state.playlist, values);
+    },
+    editPlaylistFailed: (state, action: PayloadAction<ErrorPayload>) => {
+      setFailed(state.editRequest, action);
+    },
     getPlaylist: (state, _action: PayloadAction<{ playlistId: string }>) => {
       setPending(state.getRequest);
     },
@@ -61,6 +84,9 @@ export const {
   createPlaylist,
   createPlaylistSuccess,
   createPlaylistFailed,
+  editPlaylist,
+  editPlaylistSuccess,
+  editPlaylistFailed,
   getPlaylist,
   getPlaylistSuccess,
   getPlaylistFailed

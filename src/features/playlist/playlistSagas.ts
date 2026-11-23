@@ -7,11 +7,14 @@ import {
   createPlaylist,
   createPlaylistFailed,
   createPlaylistSuccess,
+  editPlaylist,
+  editPlaylistFailed,
+  editPlaylistSuccess,
+  getPlaylist,
+  getPlaylistFailed,
   getPlaylistsFailed,
   getPlaylistsSuccess,
-  getPlaylistFailed,
-  getPlaylistSuccess,
-  getPlaylist
+  getPlaylistSuccess
 } from "./slice";
 import { getPlaylists } from "./slice";
 
@@ -51,7 +54,7 @@ function* onCreatePlaylist(action: ReturnType<typeof createPlaylist>): SagaItera
       spotifyClient.post<SpotifyApi.PlaylistObjectSimplified>("/me/playlists", {
         name: action.payload.name,
         description: action.payload.description,
-        public: action.payload.isPublic
+        public: action.payload.public
       });
     const { data } = (yield call(request)) as SagaReturnType<typeof request>;
 
@@ -63,8 +66,35 @@ function* onCreatePlaylist(action: ReturnType<typeof createPlaylist>): SagaItera
   }
 }
 
+function* onEditPlaylist(action: ReturnType<typeof editPlaylist>): SagaIterator {
+  try {
+    const request = () =>
+      spotifyClient.put<SpotifyApi.PlaylistObjectSimplified>(
+        `/playlists/${action.payload.playlistId}`,
+        {
+          name: action.payload.values.name,
+          // Spotify rejects an empty description and has
+          // no documented way to remove one: a single space is the workaround to clear it
+          description:
+            action.payload.values.description.trim() === ""
+              ? " "
+              : action.payload.values.description,
+          public: action.payload.values.public
+        }
+      );
+    (yield call(request)) as SagaReturnType<typeof request>;
+
+    yield put(editPlaylistSuccess(action.payload));
+  } catch (error) {
+    yield put(
+      editPlaylistFailed({ message: error instanceof Error ? error.message : String(error) })
+    );
+  }
+}
+
 export default function* playlistSaga() {
   yield takeLatest(getPlaylists.type, fetchPlaylists);
   yield takeEvery(createPlaylist.type, onCreatePlaylist);
+  yield takeEvery(editPlaylist.type, onEditPlaylist);
   yield takeLatest(getPlaylist.type, fetchPlaylist);
 }

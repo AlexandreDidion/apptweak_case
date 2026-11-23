@@ -142,7 +142,7 @@ function PlaylistForm({
             }}
           </form.Field>
 
-          <form.Field name="isPublic">
+          <form.Field name="public">
             {(field) => (
               <Field orientation="horizontal">
                 <FieldContent>

@@ -1,21 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TrackList } from "@/components/TrackList";
+import { LoaderCircleIcon, PencilIcon } from "lucide-react";
+import { useState } from "react";
 
-import { selectGetPlaylistRequest, selectPlaylist } from "@/features/playlist/selectors";
-import { getPlaylist } from "@/features/playlist/slice";
+import { TrackList } from "@/components/TrackList";
+import { Button } from "@/components/ui/button";
+import { PlaylistFormDialog } from "@/features/playlist/components/PlaylistFormDialog";
+import { emptyPlaylistFormValues } from "@/features/playlist/playlistFormSchema";
+import {
+  selectEditPlaylistRequest,
+  selectGetPlaylistRequest,
+  selectPlaylist
+} from "@/features/playlist/selectors";
+import { editPlaylist, getPlaylist } from "@/features/playlist/slice";
+import { useReduxMutation } from "@/store/useReduxMutation";
 import { useReduxQuery } from "@/store/useReduxQuery";
-import { LoaderCircleIcon } from "lucide-react";
 
 export const Route = createFileRoute("/playlists/$playlistId")({ component: PlaylistPage });
 
 function PlaylistPage() {
   const { playlistId } = Route.useParams();
 
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const editMutation = useReduxMutation({
+    action: editPlaylist,
+    selectState: selectEditPlaylistRequest,
+    onSuccess: () => {
+      setIsEditDialogOpen(false);
+    }
+  });
+
   const {
     data: playlist,
     isLoading,
-    isError,
-    error
+    isError
   } = useReduxQuery({
     action: getPlaylist,
     actionPayload: { playlistId },
@@ -37,11 +54,42 @@ function PlaylistPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-center">Playlist {playlist.name}</h1>
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold">Your tracks</h2>
-        <TrackList playlistTracks={playlist.items?.items || []} />
+      <div className="space-y-1">
+        <div className="flex items-center gap-1 justify-center">
+          <h1 className="text-2xl font-bold text-center">{playlist.name}</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Edit playlist details"
+            onClick={() => {
+              setIsEditDialogOpen(true);
+            }}
+          >
+            <PencilIcon />
+          </Button>
+        </div>
+        {playlist.description && <p className="text-center text-sm">{playlist.description}</p>}
       </div>
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold">Tracks</h2>
+        <TrackList playlistTracks={playlist.items?.items ?? []} />
+      </div>
+      <PlaylistFormDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        defaultValues={{
+          name: playlist.name,
+          description: playlist.description ?? emptyPlaylistFormValues.description,
+          public: playlist.public ?? emptyPlaylistFormValues.public
+        }}
+        title="Edit playlist"
+        submitLabel="Save"
+        onSubmit={(values) => {
+          editMutation.mutate({ playlistId, values });
+        }}
+        isSubmitting={editMutation.isPending}
+        submitError={editMutation.isError ? editMutation.error : undefined}
+      />
     </div>
   );
 }

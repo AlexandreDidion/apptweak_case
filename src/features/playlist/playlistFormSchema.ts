@@ -12,7 +12,7 @@ export const playlistFormSchema = z.object({
   // Optional for Spotify, sent only when filled in
   description: z.string().trim().max(300, "Description must be at most 300 characters."),
   // Sent to Spotify as `public`
-  isPublic: z.boolean()
+  public: z.boolean()
 });
 
 export type PlaylistFormValues = z.infer<typeof playlistFormSchema>;
@@ -21,5 +21,5 @@ export type PlaylistFormValues = z.infer<typeof playlistFormSchema>;
 export const emptyPlaylistFormValues: PlaylistFormValues = {
   name: "",
   description: "",
-  isPublic: true
+  public: true
 };

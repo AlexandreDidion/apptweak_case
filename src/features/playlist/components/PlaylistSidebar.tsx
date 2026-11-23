@@ -1,3 +1,4 @@
+import { Link, useParams } from "@tanstack/react-router";
 import { ListMusicIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 
@@ -17,12 +18,14 @@ import {
 import { useReduxMutation } from "@/store/useReduxMutation";
 import { useReduxQuery } from "@/store/useReduxQuery";
 
-import { PlaylistFormDialog } from "./PlaylistFormDialog";
 import { selectCreatePlaylistRequest, selectPlaylists, selectPlaylistState } from "../selectors";
 import { createPlaylist, getPlaylists } from "../slice";
+import { PlaylistFormDialog } from "./PlaylistFormDialog";
 
 export function PlaylistSidebar() {
+  const { playlistId: activePlaylistId } = useParams({ strict: false });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
   const {
     data: playlists,
     isLoading,
@@ -82,7 +85,16 @@ export function PlaylistSidebar() {
                     ))
                   : playlists.map((playlist) => (
                       <SidebarMenuItem key={playlist.id}>
-                        <SidebarMenuButton tooltip={playlist.name}>
+                        <SidebarMenuButton
+                          tooltip={playlist.name}
+                          isActive={playlist.id === activePlaylistId}
+                          render={
+                            <Link
+                              to="/playlists/$playlistId"
+                              params={{ playlistId: playlist.id }}
+                            />
+                          }
+                        >
                           <ListMusicIcon />
                           <span>{playlist.name}</span>
                         </SidebarMenuButton>
