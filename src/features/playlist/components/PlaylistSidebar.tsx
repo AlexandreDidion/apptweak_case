@@ -18,8 +18,8 @@ import { useReduxMutation } from "@/store/useReduxMutation";
 import { useReduxQuery } from "@/store/useReduxQuery";
 
 import { PlaylistFormDialog } from "./PlaylistFormDialog";
-import { selectCreatePlaylistRequest, selectPlaylists, selectPlaylistState } from "./selectors";
-import { createPlaylist, getPlaylists } from "./slice";
+import { selectCreatePlaylistRequest, selectPlaylists, selectPlaylistState } from "../selectors";
+import { createPlaylist, getPlaylists } from "../slice";
 
 export function PlaylistSidebar() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);

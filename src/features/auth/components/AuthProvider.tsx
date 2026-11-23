@@ -1,9 +1,9 @@
 import { FC, ReactNode, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { RequestStatus } from "../../types/requests";
-import { selectAccessToken, selectAuthStatus } from "./selectors";
-import { getToken, getUser, login, setAccessToken } from "./slice";
+import { RequestStatus } from "@/types/requests";
+import { selectAccessToken, selectAuthStatus } from "../selectors";
+import { getToken, getUser, login, setAccessToken } from "../slice";
 
 interface AuthProviderProps {
   children: ReactNode;

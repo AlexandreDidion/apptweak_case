@@ -26,7 +26,7 @@ import {
   emptyPlaylistFormValues,
   playlistFormSchema,
   PlaylistFormValues
-} from "./playlistFormSchema";
+} from "../playlistFormSchema";
 
 const FORM_ID = "playlist-form";
 

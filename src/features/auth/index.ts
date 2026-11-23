@@ -1,3 +1,3 @@
-import AuthProvider from "./AuthProvider";
+import AuthProvider from "./components/AuthProvider";
 
 export default AuthProvider;

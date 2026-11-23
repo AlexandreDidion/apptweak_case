@@ -1,7 +1,23 @@
+import { useAppSelector } from "@/store/hooks";
+import { selectUser } from "@/features/auth/selectors";
 import { createFileRoute } from "@tanstack/react-router";
+import { LoaderCircleIcon } from "lucide-react";
+import { PlaylistList } from "@/features/playlist/components/PlaylistList";
 
 export const Route = createFileRoute("/")({ component: HomePage });
 
 function HomePage() {
-  return <h1>Home</h1>;
+  const user = useAppSelector(selectUser);
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold text-center">
+        {user ? `Welcome back, ${user.userName} !` : <LoaderCircleIcon className="animate-spin" />}
+      </h1>
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold">Your playlists</h2>
+        <PlaylistList />
+      </div>
+    </div>
+  );
 }

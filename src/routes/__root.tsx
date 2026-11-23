@@ -2,8 +2,8 @@ import { createRootRoute, Outlet } from "@tanstack/react-router";
 
 import { MainHeader } from "@/components/MainHeader";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { UserAvatar } from "@/features/auth/UserAvatar";
-import { PlaylistSidebar } from "@/features/playlist/PlaylistSidebar";
+import { UserAvatar } from "@/features/auth/components/UserAvatar";
+import { PlaylistSidebar } from "@/features/playlist/components/PlaylistSidebar";
 
 export const Route = createRootRoute({ component: RootLayout });
 

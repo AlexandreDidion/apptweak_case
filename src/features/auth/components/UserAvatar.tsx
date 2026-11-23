@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAppSelector } from "@/store/hooks";
 
-import { selectUser } from "./selectors";
+import { selectUser } from "../selectors";
 
 export function UserAvatar() {
   const user = useAppSelector(selectUser);
