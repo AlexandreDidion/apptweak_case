@@ -46,7 +46,6 @@ function* fetchPlaylist(action: ReturnType<typeof getPlaylist>): SagaIterator {
 }
 
 function* onCreatePlaylist(action: ReturnType<typeof createPlaylist>): SagaIterator {
-  console.log("Creating playlist with payload:", action.payload);
   try {
     const request = () =>
       spotifyClient.post<SpotifyApi.PlaylistObjectSimplified>("/me/playlists", {

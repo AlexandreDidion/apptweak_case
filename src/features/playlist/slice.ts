@@ -8,7 +8,7 @@ import { PlaylistFormValues } from "./playlistFormSchema";
 
 export interface PlaylistState extends CommonReduxState {
   playlists: SpotifyApi.PlaylistObjectSimplified[];
-  playlist?: SpotifyApi.PlaylistObjectSimplified;
+  playlist?: SpotifyApi.PlaylistObjectFull;
   createRequest: CommonReduxState;
   getRequest: CommonReduxState;
 }

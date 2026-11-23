@@ -32,7 +32,6 @@ export function useReduxQuery<TData, TPayload>({
   const { status, error } = useAppSelector(selectState);
 
   const refetch = useCallback(() => {
-    console.log("Refetching with payload:", actionPayload);
     dispatch(action(actionPayload as TPayload));
   }, [dispatch, action, actionPayload]);
 
