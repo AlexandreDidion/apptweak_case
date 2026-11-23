@@ -15,3 +15,5 @@ export const selectPlaylist = createSelector(selectPlaylistState, (playlist) => 
 export const selectCreatePlaylistRequest = (state: RootState) => state.playlist.createRequest;
 export const selectGetPlaylistRequest = (state: RootState) => state.playlist.getRequest;
 export const selectEditPlaylistRequest = (state: RootState) => state.playlist.editRequest;
+export const selectAddItemsRequest = (state: RootState) => state.playlist.addItemsRequest;
+export const selectRemoveItemsRequest = (state: RootState) => state.playlist.removeItemsRequest;

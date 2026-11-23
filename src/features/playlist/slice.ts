@@ -12,6 +12,13 @@ export interface PlaylistState extends CommonReduxState {
   createRequest: CommonReduxState;
   getRequest: CommonReduxState;
   editRequest: CommonReduxState;
+  addItemsRequest: CommonReduxState;
+  removeItemsRequest: CommonReduxState;
+}
+
+interface PlaylistItemsChange {
+  playlistId: string;
+  snapshotId: string;
 }
 
 const initialState: PlaylistState = {
@@ -20,8 +27,16 @@ const initialState: PlaylistState = {
   playlist: undefined,
   createRequest: { status: RequestStatus.IDLE },
   getRequest: { status: RequestStatus.IDLE },
-  editRequest: { status: RequestStatus.IDLE }
+  editRequest: { status: RequestStatus.IDLE },
+  addItemsRequest: { status: RequestStatus.IDLE },
+  removeItemsRequest: { status: RequestStatus.IDLE }
 };
+
+/** Keeps the track count of the playlist in the list (sidebar, cards) in sync */
+function updateListItemTotal(state: PlaylistState, playlistId: string, delta: number) {
+  const listItem = state.playlists.find((playlist) => playlist.id === playlistId);
+  if (listItem?.items) listItem.items.total += delta;
+}
 
 const playlistSlice = createSlice({
   name: "playlist",
@@ -73,6 +88,65 @@ const playlistSlice = createSlice({
     },
     getPlaylistFailed: (state, action: PayloadAction<ErrorPayload>) => {
       setFailed(state.getRequest, action);
+    },
+    addItemsToPlaylist: (
+      state,
+      _action: PayloadAction<{ playlistId: string; tracks: SpotifyApi.TrackObjectFull[] }>
+    ) => {
+      setPending(state.addItemsRequest);
+    },
+    addItemsToPlaylistSuccess: (
+      state,
+      action: PayloadAction<PlaylistItemsChange & { tracks: SpotifyApi.TrackObjectFull[] }>
+    ) => {
+      setSuccess(state.addItemsRequest);
+      const { playlistId, snapshotId, tracks } = action.payload;
+
+      if (state.playlist?.id === playlistId && state.playlist.items) {
+        state.playlist.items.items.push(
+          ...tracks.map(
+            (track) =>
+              ({
+                item: track
+              }) as SpotifyApi.PlaylistTrackObject
+          )
+        );
+        state.playlist.items.total += tracks.length;
+        state.playlist.snapshot_id = snapshotId;
+      }
+      updateListItemTotal(state, playlistId, tracks.length);
+    },
+    addItemsToPlaylistFailed: (state, action: PayloadAction<ErrorPayload>) => {
+      setFailed(state.addItemsRequest, action);
+    },
+    removeItemsFromPlaylist: (
+      state,
+      _action: PayloadAction<{ playlistId: string; uris: string[] }>
+    ) => {
+      setPending(state.removeItemsRequest);
+    },
+    removeItemsFromPlaylistSuccess: (
+      state,
+      action: PayloadAction<PlaylistItemsChange & { uris: string[] }>
+    ) => {
+      setSuccess(state.removeItemsRequest);
+      const { playlistId, snapshotId, uris } = action.payload;
+      let removedCount = 0;
+
+      if (state.playlist?.id === playlistId && state.playlist.items) {
+        // Spotify removes every occurrence of each URI, so do the same locally
+        const remaining = state.playlist.items.items.filter(
+          (playlistItem) => !playlistItem.item || !uris.includes(playlistItem.item.uri)
+        );
+        removedCount = state.playlist.items.items.length - remaining.length;
+        state.playlist.items.items = remaining;
+        state.playlist.items.total -= removedCount;
+        state.playlist.snapshot_id = snapshotId;
+      }
+      updateListItemTotal(state, playlistId, -removedCount);
+    },
+    removeItemsFromPlaylistFailed: (state, action: PayloadAction<ErrorPayload>) => {
+      setFailed(state.removeItemsRequest, action);
     }
   }
 });
@@ -89,7 +163,13 @@ export const {
   editPlaylistFailed,
   getPlaylist,
   getPlaylistSuccess,
-  getPlaylistFailed
+  getPlaylistFailed,
+  addItemsToPlaylist,
+  addItemsToPlaylistSuccess,
+  addItemsToPlaylistFailed,
+  removeItemsFromPlaylist,
+  removeItemsFromPlaylistSuccess,
+  removeItemsFromPlaylistFailed
 } = playlistSlice.actions;
 
 export default playlistSlice.reducer;

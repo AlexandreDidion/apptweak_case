@@ -4,6 +4,9 @@ import { call, put, SagaReturnType, takeEvery, takeLatest } from "redux-saga/eff
 import { spotifyClient } from "@/lib/spotifyClient";
 
 import {
+  addItemsToPlaylist,
+  addItemsToPlaylistFailed,
+  addItemsToPlaylistSuccess,
   createPlaylist,
   createPlaylistFailed,
   createPlaylistSuccess,
@@ -14,7 +17,10 @@ import {
   getPlaylistFailed,
   getPlaylistsFailed,
   getPlaylistsSuccess,
-  getPlaylistSuccess
+  getPlaylistSuccess,
+  removeItemsFromPlaylist,
+  removeItemsFromPlaylistFailed,
+  removeItemsFromPlaylistSuccess
 } from "./slice";
 import { getPlaylists } from "./slice";
 
@@ -92,9 +98,51 @@ function* onEditPlaylist(action: ReturnType<typeof editPlaylist>): SagaIterator 
   }
 }
 
+function* onAddItemsToPlaylist(action: ReturnType<typeof addItemsToPlaylist>): SagaIterator {
+  const { playlistId, tracks } = action.payload;
+
+  try {
+    const request = () =>
+      spotifyClient.post<SpotifyApi.AddTracksToPlaylistResponse>(`/playlists/${playlistId}/items`, {
+        uris: tracks.map((track) => track.uri)
+      });
+    const { data } = (yield call(request)) as SagaReturnType<typeof request>;
+
+    yield put(addItemsToPlaylistSuccess({ playlistId, tracks, snapshotId: data.snapshot_id }));
+  } catch (error) {
+    yield put(
+      addItemsToPlaylistFailed({ message: error instanceof Error ? error.message : String(error) })
+    );
+  }
+}
+
+function* onRemoveItemsFromPlaylist(
+  action: ReturnType<typeof removeItemsFromPlaylist>
+): SagaIterator {
+  const { playlistId, uris } = action.payload;
+  try {
+    const request = () =>
+      spotifyClient.delete<SpotifyApi.RemoveTracksFromPlaylistResponse>(
+        `/playlists/${playlistId}/items`,
+        { data: { items: uris.map((uri) => ({ uri })) } }
+      );
+    const { data } = (yield call(request)) as SagaReturnType<typeof request>;
+
+    yield put(removeItemsFromPlaylistSuccess({ playlistId, uris, snapshotId: data.snapshot_id }));
+  } catch (error) {
+    yield put(
+      removeItemsFromPlaylistFailed({
+        message: error instanceof Error ? error.message : String(error)
+      })
+    );
+  }
+}
+
 export default function* playlistSaga() {
   yield takeLatest(getPlaylists.type, fetchPlaylists);
   yield takeEvery(createPlaylist.type, onCreatePlaylist);
   yield takeEvery(editPlaylist.type, onEditPlaylist);
   yield takeLatest(getPlaylist.type, fetchPlaylist);
+  yield takeEvery(addItemsToPlaylist.type, onAddItemsToPlaylist);
+  yield takeEvery(removeItemsFromPlaylist.type, onRemoveItemsFromPlaylist);
 }
