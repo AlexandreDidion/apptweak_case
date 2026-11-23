@@ -1,8 +1,9 @@
-import { useAppSelector } from "@/store/hooks";
-import { selectUser } from "@/features/auth/selectors";
 import { createFileRoute } from "@tanstack/react-router";
 import { LoaderCircleIcon } from "lucide-react";
+
+import { selectUser } from "@/features/auth/selectors";
 import { PlaylistList } from "@/features/playlist/components/PlaylistList";
+import { useAppSelector } from "@/store/hooks";
 
 export const Route = createFileRoute("/")({ component: HomePage });
 

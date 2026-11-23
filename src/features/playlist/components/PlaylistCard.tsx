@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { LockIcon } from "lucide-react";
 
 import { ImageMosaic } from "@/components/ImageMosaic";
@@ -9,30 +10,33 @@ interface PlaylistCardProps {
 }
 
 export function PlaylistCard({ playlist }: PlaylistCardProps) {
-  // Spotify lists the largest image first
-  const coverUrl = playlist.images?.[0]?.url;
+  const coverUrls = playlist.images?.map((img) => img.url) || [];
   const trackCount = playlist.items?.total;
-  console.log(playlist);
 
   return (
-    <Card size="sm">
-      <CardContent>
-        {/* playlist.images are one cover in several sizes; pass track album covers for a 2×2 mosaic */}
-        <ImageMosaic images={coverUrl ? [coverUrl] : []} />
-      </CardContent>
+    <Link
+      to="/playlists/$playlistId"
+      params={{ playlistId: playlist.id }}
+      className="group block rounded-2xl"
+    >
+      <Card size="sm" className="transition-colors group-hover:bg-muted">
+        <CardContent>
+          <ImageMosaic images={coverUrls} />
+        </CardContent>
 
-      <CardHeader>
-        <CardTitle className="truncate">{playlist.name}</CardTitle>
-        <CardDescription className="flex items-center gap-1">
-          {playlist.public === false && (
-            <LockIcon className="size-3 shrink-0" aria-label="Private" role="img" />
-          )}
-          <span className="truncate">
-            {trackCount !== undefined && `${trackCount.toString()} tracks`}
-          </span>
-        </CardDescription>
-      </CardHeader>
-    </Card>
+        <CardHeader>
+          <CardTitle className="truncate">{playlist.name}</CardTitle>
+          <CardDescription className="flex items-center gap-1">
+            {playlist.public === false && (
+              <LockIcon className="size-3 shrink-0" aria-label="Private" role="img" />
+            )}
+            <span className="truncate">
+              {trackCount !== undefined && `${trackCount.toString()} tracks`}
+            </span>
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </Link>
   );
 }
 

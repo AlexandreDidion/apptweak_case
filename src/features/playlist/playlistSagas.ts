@@ -8,7 +8,10 @@ import {
   createPlaylistFailed,
   createPlaylistSuccess,
   getPlaylistsFailed,
-  getPlaylistsSuccess
+  getPlaylistsSuccess,
+  getPlaylistFailed,
+  getPlaylistSuccess,
+  getPlaylist
 } from "./slice";
 import { getPlaylists } from "./slice";
 
@@ -22,6 +25,22 @@ function* fetchPlaylists(): SagaIterator {
   } catch (error) {
     yield put(
       getPlaylistsFailed({ message: error instanceof Error ? error.message : String(error) })
+    );
+  }
+}
+
+function* fetchPlaylist(action: ReturnType<typeof getPlaylist>): SagaIterator {
+  try {
+    const request = () =>
+      spotifyClient.get<SpotifyApi.SinglePlaylistResponse>(
+        `/playlists/${action.payload.playlistId}`
+      );
+    const { data } = (yield call(request)) as SagaReturnType<typeof request>;
+
+    yield put(getPlaylistSuccess(data));
+  } catch (error) {
+    yield put(
+      getPlaylistFailed({ message: error instanceof Error ? error.message : String(error) })
     );
   }
 }
@@ -48,4 +67,5 @@ function* onCreatePlaylist(action: ReturnType<typeof createPlaylist>): SagaItera
 export default function* playlistSaga() {
   yield takeLatest(getPlaylists.type, fetchPlaylists);
   yield takeEvery(createPlaylist.type, onCreatePlaylist);
+  yield takeLatest(getPlaylist.type, fetchPlaylist);
 }

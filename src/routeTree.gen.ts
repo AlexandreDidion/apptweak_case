@@ -10,43 +10,43 @@
 
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as IndexRouteImport } from "./routes/index"
-import { Route as PlaylistsRouteImport } from "./routes/playlists"
+import { Route as PlaylistsPlaylistIdRouteImport } from "./routes/playlists.$playlistId"
 
 const IndexRoute = IndexRouteImport.update({
   id: "/",
   path: "/",
   getParentRoute: () => rootRouteImport,
 } as any)
-const PlaylistsRoute = PlaylistsRouteImport.update({
-  id: "/playlists",
-  path: "/playlists",
+const PlaylistsPlaylistIdRoute = PlaylistsPlaylistIdRouteImport.update({
+  id: "/playlists/$playlistId",
+  path: "/playlists/$playlistId",
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
-  "/playlists": typeof PlaylistsRoute
+  "/playlists/$playlistId": typeof PlaylistsPlaylistIdRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
-  "/playlists": typeof PlaylistsRoute
+  "/playlists/$playlistId": typeof PlaylistsPlaylistIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
-  "/playlists": typeof PlaylistsRoute
+  "/playlists/$playlistId": typeof PlaylistsPlaylistIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/playlists"
+  fullPaths: "/" | "/playlists/$playlistId"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/playlists"
-  id: "__root__" | "/" | "/playlists"
+  to: "/" | "/playlists/$playlistId"
+  id: "__root__" | "/" | "/playlists/$playlistId"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PlaylistsRoute: typeof PlaylistsRoute
+  PlaylistsPlaylistIdRoute: typeof PlaylistsPlaylistIdRoute
 }
 
 declare module "@tanstack/react-router" {
@@ -58,11 +58,11 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/playlists": {
-      id: "/playlists"
-      path: "/playlists"
-      fullPath: "/playlists"
-      preLoaderRoute: typeof PlaylistsRouteImport
+    "/playlists/$playlistId": {
+      id: "/playlists/$playlistId"
+      path: "/playlists/$playlistId"
+      fullPath: "/playlists/$playlistId"
+      preLoaderRoute: typeof PlaylistsPlaylistIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -70,7 +70,7 @@ declare module "@tanstack/react-router" {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PlaylistsRoute: PlaylistsRoute,
+  PlaylistsPlaylistIdRoute: PlaylistsPlaylistIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

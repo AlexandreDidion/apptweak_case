@@ -9,5 +9,8 @@ export const selectPlaylists = createSelector(
   (playlist) => playlist.playlists
 );
 
+export const selectPlaylist = createSelector(selectPlaylistState, (playlist) => playlist.playlist);
+
 // Returns the nested object itself: a stable reference for useReduxMutation
 export const selectCreatePlaylistRequest = (state: RootState) => state.playlist.createRequest;
+export const selectGetPlaylistRequest = (state: RootState) => state.playlist.getRequest;
