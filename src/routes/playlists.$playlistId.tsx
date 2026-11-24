@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { LoaderCircleIcon, PencilIcon } from "lucide-react";
 import { useState } from "react";
 
-import { TrackList } from "@/components/TrackList";
 import { Button } from "@/components/ui/button";
 import { PlaylistFormDialog } from "@/features/playlist/components/PlaylistFormDialog";
+import { PlaylistTrackList } from "@/features/playlist/components/PlaylistTrackList";
 import { emptyPlaylistFormValues } from "@/features/playlist/playlistFormSchema";
 import {
   selectEditPlaylistRequest,
@@ -72,7 +72,7 @@ function PlaylistPage() {
       </div>
       <div className="space-y-2">
         <h2 className="text-xl font-semibold">Tracks</h2>
-        <TrackList playlistTracks={playlist.items?.items ?? []} />
+        <PlaylistTrackList playlist={playlist} />
       </div>
       <PlaylistFormDialog
         open={isEditDialogOpen}

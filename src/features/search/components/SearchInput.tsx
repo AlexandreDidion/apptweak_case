@@ -94,10 +94,8 @@ export function SearchInput({ onTrackSelect, targetName }: SearchInputProps) {
             <ComboboxItem key={track.id} value={track} className="cursor-pointer">
               <TrackLine
                 track={track}
-                as="div"
-                showPlayButton={false}
-                className="w-full py-0"
-                action={<PlusIcon className="text-muted-foreground" aria-hidden="true" />}
+                className="w-full"
+                actions={<PlusIcon className="text-muted-foreground" aria-hidden="true" />}
               />
             </ComboboxItem>
           )}

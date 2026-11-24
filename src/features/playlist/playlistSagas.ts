@@ -99,16 +99,20 @@ function* onEditPlaylist(action: ReturnType<typeof editPlaylist>): SagaIterator 
 }
 
 function* onAddItemsToPlaylist(action: ReturnType<typeof addItemsToPlaylist>): SagaIterator {
-  const { playlistId, tracks } = action.payload;
+  const { playlistId, tracks, position } = action.payload;
 
   try {
     const request = () =>
       spotifyClient.post<SpotifyApi.AddTracksToPlaylistResponse>(`/playlists/${playlistId}/items`, {
-        uris: tracks.map((track) => track.uri)
+        uris: tracks.map((track) => track.uri),
+        // Spotify appends when position is left out
+        ...(position !== undefined && { position })
       });
     const { data } = (yield call(request)) as SagaReturnType<typeof request>;
 
-    yield put(addItemsToPlaylistSuccess({ playlistId, tracks, snapshotId: data.snapshot_id }));
+    yield put(
+      addItemsToPlaylistSuccess({ playlistId, tracks, position, snapshotId: data.snapshot_id })
+    );
   } catch (error) {
     yield put(
       addItemsToPlaylistFailed({ message: error instanceof Error ? error.message : String(error) })

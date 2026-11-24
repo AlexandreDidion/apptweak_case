@@ -91,26 +91,34 @@ const playlistSlice = createSlice({
     },
     addItemsToPlaylist: (
       state,
-      _action: PayloadAction<{ playlistId: string; tracks: SpotifyApi.TrackObjectFull[] }>
+      _action: PayloadAction<{
+        playlistId: string;
+        tracks: SpotifyApi.TrackObjectFull[];
+        /** Zero-based index to insert at, appended when omitted (e.g. to undo a removal) */
+        position?: number;
+      }>
     ) => {
       setPending(state.addItemsRequest);
     },
     addItemsToPlaylistSuccess: (
       state,
-      action: PayloadAction<PlaylistItemsChange & { tracks: SpotifyApi.TrackObjectFull[] }>
+      action: PayloadAction<
+        PlaylistItemsChange & { tracks: SpotifyApi.TrackObjectFull[]; position?: number }
+      >
     ) => {
       setSuccess(state.addItemsRequest);
-      const { playlistId, snapshotId, tracks } = action.payload;
+      const { playlistId, snapshotId, tracks, position } = action.payload;
 
       if (state.playlist?.id === playlistId && state.playlist.items) {
-        state.playlist.items.items.push(
-          ...tracks.map(
-            (track) =>
-              ({
-                item: track
-              }) as SpotifyApi.PlaylistTrackObject
-          )
+        const items = state.playlist.items.items;
+        const newItems = tracks.map(
+          (track) =>
+            ({
+              item: track
+            }) as SpotifyApi.PlaylistTrackObject
         );
+        // Same as Spotify: insert at `position`, or append
+        items.splice(position ?? items.length, 0, ...newItems);
         state.playlist.items.total += tracks.length;
         state.playlist.snapshot_id = snapshotId;
       }
