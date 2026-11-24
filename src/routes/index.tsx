@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Disc3Icon } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Disc3Icon, EyeOffIcon, RepeatIcon } from "lucide-react";
 
+import { Button, buttonVariants } from "@/components/ui/button";
 import { selectUser } from "@/features/auth/selectors";
 import { PlaylistList } from "@/features/playlist/components/PlaylistList";
 import { useAppSelector } from "@/store/hooks";
@@ -15,6 +16,12 @@ function HomePage() {
       <h1 className="text-2xl font-bold text-center">
         {user ? `Welcome back, ${user.userName} !` : <Disc3Icon className="animate-spin" />}
       </h1>
+      <div className="flex justify-center gap-3">
+        <Link to="/obsession" className={buttonVariants()}>
+          <RepeatIcon />
+          Obsession
+        </Link>
+      </div>
       <div className="space-y-2">
         <h2 className="text-xl font-semibold">Your playlists</h2>
         <PlaylistList />

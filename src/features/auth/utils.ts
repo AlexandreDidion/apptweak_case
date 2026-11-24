@@ -1,4 +1,8 @@
-import { ACCESS_TOKEN_STORAGE_KEY, EXPIRES_AT_STORAGE_KEY,REFRESH_TOKEN_STORAGE_KEY } from "@/lib/constants";
+import {
+  ACCESS_TOKEN_STORAGE_KEY,
+  EXPIRES_AT_STORAGE_KEY,
+  REFRESH_TOKEN_STORAGE_KEY
+} from "@/lib/constants";
 
 /**
  * List of the Spotify API scopes that are used in the app.
@@ -11,7 +15,8 @@ export const SPOTIFY_SCOPE = [
   "playlist-read-private",
   "playlist-modify-private",
   "playlist-modify-public",
-  "user-library-read"
+  "user-library-read",
+  "user-top-read"
 ];
 
 /**

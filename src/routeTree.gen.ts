@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as IndexRouteImport } from "./routes/index"
+import { Route as ObsessionRouteImport } from "./routes/obsession"
 import { Route as PlaylistsPlaylistIdRouteImport } from "./routes/playlists.$playlistId"
 
 const IndexRoute = IndexRouteImport.update({
   id: "/",
   path: "/",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObsessionRoute = ObsessionRouteImport.update({
+  id: "/obsession",
+  path: "/obsession",
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlaylistsPlaylistIdRoute = PlaylistsPlaylistIdRouteImport.update({
@@ -25,27 +31,31 @@ const PlaylistsPlaylistIdRoute = PlaylistsPlaylistIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
+  "/obsession": typeof ObsessionRoute
   "/playlists/$playlistId": typeof PlaylistsPlaylistIdRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
+  "/obsession": typeof ObsessionRoute
   "/playlists/$playlistId": typeof PlaylistsPlaylistIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
+  "/obsession": typeof ObsessionRoute
   "/playlists/$playlistId": typeof PlaylistsPlaylistIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/playlists/$playlistId"
+  fullPaths: "/" | "/obsession" | "/playlists/$playlistId"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/playlists/$playlistId"
-  id: "__root__" | "/" | "/playlists/$playlistId"
+  to: "/" | "/obsession" | "/playlists/$playlistId"
+  id: "__root__" | "/" | "/obsession" | "/playlists/$playlistId"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ObsessionRoute: typeof ObsessionRoute
   PlaylistsPlaylistIdRoute: typeof PlaylistsPlaylistIdRoute
 }
 
@@ -56,6 +66,13 @@ declare module "@tanstack/react-router" {
       path: "/"
       fullPath: "/"
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/obsession": {
+      id: "/obsession"
+      path: "/obsession"
+      fullPath: "/obsession"
+      preLoaderRoute: typeof ObsessionRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/playlists/$playlistId": {
@@ -70,6 +87,7 @@ declare module "@tanstack/react-router" {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ObsessionRoute: ObsessionRoute,
   PlaylistsPlaylistIdRoute: PlaylistsPlaylistIdRoute,
 }
 export const routeTree = rootRouteImport
