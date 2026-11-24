@@ -1,4 +1,4 @@
-import { LoaderCircleIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { Disc3Icon, PlusIcon, SearchIcon } from "lucide-react";
 import { useState } from "react";
 
 import { TrackLine } from "@/components/TrackLine";
@@ -79,7 +79,7 @@ export function SearchInput({ onTrackSelect, targetName }: SearchInputProps) {
         >
           <InputGroupAddon>
             {isSearching ? (
-              <LoaderCircleIcon className="animate-spin" aria-hidden="true" />
+              <Disc3Icon className="animate-spin" aria-hidden="true" />
             ) : (
               <SearchIcon aria-hidden="true" />
             )}

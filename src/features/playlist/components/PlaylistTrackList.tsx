@@ -7,9 +7,9 @@ import { selectUser } from "@/features/auth/selectors";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useReduxMutation } from "@/store/useReduxMutation";
 
+import { RemoveTrackButton } from "../../../components/RemoveTrackButton";
 import { selectRemoveItemsRequest } from "../selectors";
 import { addItemsToPlaylist, removeItemsFromPlaylist } from "../slice";
-import { RemoveTrackButton } from "../../../components/RemoveTrackButton";
 
 interface PlaylistTrackListProps {
   playlist: SpotifyApi.PlaylistObjectFull;

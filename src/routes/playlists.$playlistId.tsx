@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { LoaderCircleIcon, PencilIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
+import { CenteredSpinner } from "@/components/CenteredSpinner";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -41,11 +42,7 @@ function PlaylistPage() {
   });
 
   if (isLoading) {
-    return (
-      <div className="h-full w-full flex justify-center items-center">
-        <LoaderCircleIcon className="animate-spin" size={46} />
-      </div>
-    );
+    return <CenteredSpinner />;
   }
 
   if (isError || !playlist) {
