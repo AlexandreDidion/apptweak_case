@@ -10,6 +10,10 @@ export function TrackList({ playlistTracks }: TrackListProps) {
     return acc;
   }, []);
 
+  if (tracks.length === 0) {
+    return <p>No tracks yet.</p>;
+  }
+
   return (
     <ul>
       {tracks.map((track) => (
