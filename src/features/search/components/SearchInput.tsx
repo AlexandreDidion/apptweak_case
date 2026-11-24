@@ -12,11 +12,15 @@ import {
   useComboboxAnchor
 } from "@/components/ui/combobox";
 import { InputGroupAddon } from "@/components/ui/input-group";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { RequestStatus } from "@/types/requests";
 
 import { selectSearchQuery, selectSearchState } from "../selectors";
 import { clearSearch, searchTracks } from "../slice";
+
+const HIPSTER_SWITCH_ID = "hipster-search-switch";
 
 interface SearchInputProps {
   onTrackSelect?: (track: SpotifyApi.TrackObjectFull) => void;
@@ -30,6 +34,7 @@ export function SearchInput({ onTrackSelect, targetName }: SearchInputProps) {
   const lastQuery = useAppSelector(selectSearchQuery);
 
   const [query, setQuery] = useState(lastQuery);
+  const [isHipsterSearch, setIsHipsterSearch] = useState(false);
 
   const isSearching = status === RequestStatus.PENDING;
 
@@ -67,24 +72,44 @@ export function SearchInput({ onTrackSelect, targetName }: SearchInputProps) {
 
         setQuery(nextQuery);
         // The saga debounces and cancels outdated searches
-        dispatch(searchTracks({ query: nextQuery }));
+        dispatch(searchTracks({ query: nextQuery, isHipsterSearch }));
       }}
     >
-      <div ref={anchor}>
-        <ComboboxInput
-          placeholder={targetName ? `Search tracks to add to "${targetName}"` : "Search tracks"}
-          aria-label="Search tracks"
-          aria-busy={isSearching || undefined}
-          showTrigger={false}
-        >
-          <InputGroupAddon>
-            {isSearching ? (
-              <Disc3Icon className="animate-spin" aria-hidden="true" />
-            ) : (
-              <SearchIcon aria-hidden="true" />
-            )}
-          </InputGroupAddon>
-        </ComboboxInput>
+      <div className="flex items-center gap-2">
+        <div ref={anchor} className="min-w-0 flex-1">
+          <ComboboxInput
+            placeholder={targetName ? `Search tracks to add to "${targetName}"` : "Search tracks"}
+            aria-label="Search tracks"
+            aria-busy={isSearching || undefined}
+            showTrigger={false}
+          >
+            <InputGroupAddon>
+              {isSearching ? (
+                <Disc3Icon className="animate-spin" aria-hidden="true" />
+              ) : (
+                <SearchIcon aria-hidden="true" />
+              )}
+            </InputGroupAddon>
+          </ComboboxInput>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <Switch
+            id={HIPSTER_SWITCH_ID}
+            checked={isHipsterSearch}
+            onCheckedChange={(checked) => {
+              setIsHipsterSearch(checked);
+              // Re-run the current query with the new mode
+              if (query.trim()) dispatch(searchTracks({ query, isHipsterSearch: checked }));
+            }}
+          />
+          <Label
+            htmlFor={HIPSTER_SWITCH_ID}
+            title="Only little-known results (Spotify's tag:hipster)"
+          >
+            Hipster search mode
+          </Label>
+        </div>
       </div>
 
       <ComboboxContent anchor={anchor}>
