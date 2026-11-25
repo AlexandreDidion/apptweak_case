@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useReduxMutation } from "@/store/useReduxMutation";
 
 import { RemoveTrackButton } from "../../../components/RemoveTrackButton";
+import { playlistItemTracks } from "../playlistItemTracks";
 import { selectRemoveItemsRequest } from "../selectors";
 import { addItemsToPlaylist, removeItemsFromPlaylist } from "../slice";
 
@@ -20,9 +21,7 @@ export function PlaylistTrackList({ playlist }: PlaylistTrackListProps) {
   const user = useAppSelector(selectUser);
 
   const canEdit = playlist.owner.id === user?.userId || playlist.collaborative;
-  const tracks = (playlist.items?.items ?? []).flatMap((playlistItem) =>
-    playlistItem.item ? [playlistItem.item] : []
-  );
+  const tracks = playlistItemTracks(playlist.items?.items ?? []);
 
   const [removal, setRemoval] = useState<{
     track: SpotifyApi.TrackObjectFull;

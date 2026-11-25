@@ -8,8 +8,3 @@ export enum RequestStatus {
 export interface ErrorPayload {
   message: string;
 }
-
-export interface AxiosOptions {
-  accessToken?: string;
-  baseURL?: string;
-}

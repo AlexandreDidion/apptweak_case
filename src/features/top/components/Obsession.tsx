@@ -63,12 +63,6 @@ export function Obsession() {
       {isError ? (
         <p className="text-center text-sm text-destructive">
           Could not load your top items: {error}
-          {error?.includes("403") && (
-            <>
-              <br />
-              This page needs a new permission: log out and log in again.
-            </>
-          )}
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">

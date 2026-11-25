@@ -2,6 +2,7 @@ import { SagaIterator } from "redux-saga";
 import { call, put, SagaReturnType, takeEvery, takeLatest } from "redux-saga/effects";
 
 import { spotifyClient } from "@/lib/spotifyClient";
+import { fetchAllPages } from "@/lib/spotifyPaging";
 
 import {
   addItemsToPlaylist,
@@ -15,6 +16,7 @@ import {
   editPlaylistSuccess,
   getPlaylist,
   getPlaylistFailed,
+  getPlaylists,
   getPlaylistsFailed,
   getPlaylistsSuccess,
   getPlaylistSuccess,
@@ -22,15 +24,16 @@ import {
   removeItemsFromPlaylistFailed,
   removeItemsFromPlaylistSuccess
 } from "./slice";
-import { getPlaylists } from "./slice";
 
 function* fetchPlaylists(): SagaIterator {
   try {
-    const request = () =>
-      spotifyClient.get<SpotifyApi.ListOfCurrentUsersPlaylistsResponse>("/me/playlists");
-    const { data } = (yield call(request)) as SagaReturnType<typeof request>;
+    // Every page: one request only returned the first 20 playlists
+    const playlists = (yield call(
+      fetchAllPages<SpotifyApi.PlaylistObjectSimplified>,
+      "/me/playlists"
+    )) as SpotifyApi.PlaylistObjectSimplified[];
 
-    yield put(getPlaylistsSuccess(data.items));
+    yield put(getPlaylistsSuccess(playlists));
   } catch (error) {
     yield put(
       getPlaylistsFailed({ message: error instanceof Error ? error.message : String(error) })

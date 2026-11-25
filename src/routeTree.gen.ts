@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from "./routes/__root"
 import { Route as IndexRouteImport } from "./routes/index"
+import { Route as NaughtyRouteImport } from "./routes/naughty"
 import { Route as ObsessionRouteImport } from "./routes/obsession"
 import { Route as PlaylistsPlaylistIdRouteImport } from "./routes/playlists.$playlistId"
 
 const IndexRoute = IndexRouteImport.update({
   id: "/",
   path: "/",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NaughtyRoute = NaughtyRouteImport.update({
+  id: "/naughty",
+  path: "/naughty",
   getParentRoute: () => rootRouteImport,
 } as any)
 const ObsessionRoute = ObsessionRouteImport.update({
@@ -31,30 +37,34 @@ const PlaylistsPlaylistIdRoute = PlaylistsPlaylistIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
+  "/naughty": typeof NaughtyRoute
   "/obsession": typeof ObsessionRoute
   "/playlists/$playlistId": typeof PlaylistsPlaylistIdRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
+  "/naughty": typeof NaughtyRoute
   "/obsession": typeof ObsessionRoute
   "/playlists/$playlistId": typeof PlaylistsPlaylistIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
+  "/naughty": typeof NaughtyRoute
   "/obsession": typeof ObsessionRoute
   "/playlists/$playlistId": typeof PlaylistsPlaylistIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/" | "/obsession" | "/playlists/$playlistId"
+  fullPaths: "/" | "/naughty" | "/obsession" | "/playlists/$playlistId"
   fileRoutesByTo: FileRoutesByTo
-  to: "/" | "/obsession" | "/playlists/$playlistId"
-  id: "__root__" | "/" | "/obsession" | "/playlists/$playlistId"
+  to: "/" | "/naughty" | "/obsession" | "/playlists/$playlistId"
+  id: "__root__" | "/" | "/naughty" | "/obsession" | "/playlists/$playlistId"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NaughtyRoute: typeof NaughtyRoute
   ObsessionRoute: typeof ObsessionRoute
   PlaylistsPlaylistIdRoute: typeof PlaylistsPlaylistIdRoute
 }
@@ -66,6 +76,13 @@ declare module "@tanstack/react-router" {
       path: "/"
       fullPath: "/"
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/naughty": {
+      id: "/naughty"
+      path: "/naughty"
+      fullPath: "/naughty"
+      preLoaderRoute: typeof NaughtyRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/obsession": {
@@ -87,6 +104,7 @@ declare module "@tanstack/react-router" {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NaughtyRoute: NaughtyRoute,
   ObsessionRoute: ObsessionRoute,
   PlaylistsPlaylistIdRoute: PlaylistsPlaylistIdRoute,
 }

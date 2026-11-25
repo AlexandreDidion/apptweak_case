@@ -5,6 +5,7 @@ import { CommonReduxState } from "@/types/redux";
 import { ErrorPayload, RequestStatus } from "@/types/requests";
 
 import { PlaylistFormValues } from "./playlistFormSchema";
+import { playlistItemTracks } from "./playlistItemTracks";
 
 export interface PlaylistState extends CommonReduxState {
   playlists: SpotifyApi.PlaylistObjectSimplified[];
@@ -14,6 +15,12 @@ export interface PlaylistState extends CommonReduxState {
   editRequest: CommonReduxState;
   addItemsRequest: CommonReduxState;
   removeItemsRequest: CommonReduxState;
+  /**
+   * Tracks of every playlist opened during the session, so other features (e.g. the naughty
+   * list) can use them without new requests. Kept up to date by the add/remove reducers
+   */
+  // Partial: a playlist has no entry until it's opened
+  tracksByPlaylistId: Partial<Record<string, SpotifyApi.TrackObjectFull[]>>;
 }
 
 interface PlaylistItemsChange {
@@ -29,8 +36,15 @@ const initialState: PlaylistState = {
   getRequest: { status: RequestStatus.IDLE },
   editRequest: { status: RequestStatus.IDLE },
   addItemsRequest: { status: RequestStatus.IDLE },
-  removeItemsRequest: { status: RequestStatus.IDLE }
+  removeItemsRequest: { status: RequestStatus.IDLE },
+  tracksByPlaylistId: {}
 };
+
+/** Copies the opened playlist's tracks into `tracksByPlaylistId` */
+function cacheOpenedPlaylistTracks(state: PlaylistState) {
+  if (!state.playlist?.items) return;
+  state.tracksByPlaylistId[state.playlist.id] = playlistItemTracks(state.playlist.items.items);
+}
 
 /** Keeps the track count of the playlist in the list (sidebar, cards) in sync */
 function updateListItemTotal(state: PlaylistState, playlistId: string, delta: number) {
@@ -85,6 +99,7 @@ const playlistSlice = createSlice({
     getPlaylistSuccess: (state, action: PayloadAction<SpotifyApi.PlaylistObjectFull>) => {
       setSuccess(state.getRequest);
       state.playlist = action.payload;
+      cacheOpenedPlaylistTracks(state);
     },
     getPlaylistFailed: (state, action: PayloadAction<ErrorPayload>) => {
       setFailed(state.getRequest, action);
@@ -121,6 +136,10 @@ const playlistSlice = createSlice({
         items.splice(position ?? items.length, 0, ...newItems);
         state.playlist.items.total += tracks.length;
         state.playlist.snapshot_id = snapshotId;
+        cacheOpenedPlaylistTracks(state);
+      } else {
+        // Added from elsewhere (e.g. the picker dialog) to a playlist opened earlier
+        state.tracksByPlaylistId[playlistId]?.push(...tracks);
       }
       updateListItemTotal(state, playlistId, tracks.length);
     },
@@ -150,6 +169,7 @@ const playlistSlice = createSlice({
         state.playlist.items.items = remaining;
         state.playlist.items.total -= removedCount;
         state.playlist.snapshot_id = snapshotId;
+        cacheOpenedPlaylistTracks(state);
       }
       updateListItemTotal(state, playlistId, -removedCount);
     },
