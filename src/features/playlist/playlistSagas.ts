@@ -1,9 +1,18 @@
 import { SagaIterator } from "redux-saga";
-import { call, put, SagaReturnType, takeEvery, takeLatest } from "redux-saga/effects";
+import {
+  call,
+  put,
+  SagaReturnType,
+  select,
+  takeEvery,
+  takeLatest,
+  takeLeading
+} from "redux-saga/effects";
 
 import { spotifyClient } from "@/lib/spotifyClient";
 import { fetchAllPages } from "@/lib/spotifyPaging";
 
+import { selectPlaylist } from "./selectors";
 import {
   addItemsToPlaylist,
   addItemsToPlaylistFailed,
@@ -14,6 +23,9 @@ import {
   editPlaylist,
   editPlaylistFailed,
   editPlaylistSuccess,
+  getMorePlaylistItems,
+  getMorePlaylistItemsFailed,
+  getMorePlaylistItemsSuccess,
   getPlaylist,
   getPlaylistFailed,
   getPlaylists,
@@ -53,6 +65,34 @@ function* fetchPlaylist(action: ReturnType<typeof getPlaylist>): SagaIterator {
   } catch (error) {
     yield put(
       getPlaylistFailed({ message: error instanceof Error ? error.message : String(error) })
+    );
+  }
+}
+
+/** Maximum page size of /playlists/{id}/items */
+const ITEMS_PAGE_LIMIT = 50;
+
+function* fetchMorePlaylistItems(action: ReturnType<typeof getMorePlaylistItems>): SagaIterator {
+  const { playlistId } = action.payload;
+
+  try {
+    const playlist = (yield select(selectPlaylist)) as SagaReturnType<typeof selectPlaylist>;
+    // From the items loaded, not Spotify's `next`: removing or inserting a track shifts the
+    // offsets, and `next` would then skip or repeat tracks
+    const offset = playlist?.items?.items.length ?? 0;
+
+    const request = () =>
+      spotifyClient.get<SpotifyApi.PlaylistTrackResponse>(`/playlists/${playlistId}/items`, {
+        params: { limit: ITEMS_PAGE_LIMIT, offset }
+      });
+    const { data } = (yield call(request)) as SagaReturnType<typeof request>;
+
+    yield put(getMorePlaylistItemsSuccess({ playlistId, items: data.items }));
+  } catch (error) {
+    yield put(
+      getMorePlaylistItemsFailed({
+        message: error instanceof Error ? error.message : String(error)
+      })
     );
   }
 }
@@ -150,6 +190,8 @@ export default function* playlistSaga() {
   yield takeEvery(createPlaylist.type, onCreatePlaylist);
   yield takeEvery(editPlaylist.type, onEditPlaylist);
   yield takeLatest(getPlaylist.type, fetchPlaylist);
+  // Leading: a double click must not fetch the same page twice
+  yield takeLeading(getMorePlaylistItems.type, fetchMorePlaylistItems);
   yield takeEvery(addItemsToPlaylist.type, onAddItemsToPlaylist);
   yield takeEvery(removeItemsFromPlaylist.type, onRemoveItemsFromPlaylist);
 }

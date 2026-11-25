@@ -12,6 +12,7 @@ export interface PlaylistState extends CommonReduxState {
   playlist?: SpotifyApi.PlaylistObjectFull;
   createRequest: CommonReduxState;
   getRequest: CommonReduxState;
+  getMoreItemsRequest: CommonReduxState;
   editRequest: CommonReduxState;
   addItemsRequest: CommonReduxState;
   removeItemsRequest: CommonReduxState;
@@ -34,6 +35,7 @@ const initialState: PlaylistState = {
   playlist: undefined,
   createRequest: { status: RequestStatus.IDLE },
   getRequest: { status: RequestStatus.IDLE },
+  getMoreItemsRequest: { status: RequestStatus.IDLE },
   editRequest: { status: RequestStatus.IDLE },
   addItemsRequest: { status: RequestStatus.IDLE },
   removeItemsRequest: { status: RequestStatus.IDLE },
@@ -104,6 +106,26 @@ const playlistSlice = createSlice({
     getPlaylistFailed: (state, action: PayloadAction<ErrorPayload>) => {
       setFailed(state.getRequest, action);
     },
+    /** Fetches the next page of the open playlist's items */
+    getMorePlaylistItems: (state, _action: PayloadAction<{ playlistId: string }>) => {
+      setPending(state.getMoreItemsRequest);
+    },
+    getMorePlaylistItemsSuccess: (
+      state,
+      action: PayloadAction<{ playlistId: string; items: SpotifyApi.PlaylistTrackObject[] }>
+    ) => {
+      setSuccess(state.getMoreItemsRequest);
+      const { playlistId, items } = action.payload;
+
+      // Ignored if another playlist was opened in the meantime
+      if (state.playlist?.id === playlistId && state.playlist.items) {
+        state.playlist.items.items.push(...items);
+        cacheOpenedPlaylistTracks(state);
+      }
+    },
+    getMorePlaylistItemsFailed: (state, action: PayloadAction<ErrorPayload>) => {
+      setFailed(state.getMoreItemsRequest, action);
+    },
     addItemsToPlaylist: (
       state,
       _action: PayloadAction<{
@@ -126,14 +148,20 @@ const playlistSlice = createSlice({
 
       if (state.playlist?.id === playlistId && state.playlist.items) {
         const items = state.playlist.items.items;
-        const newItems = tracks.map(
-          (track) =>
-            ({
-              item: track
-            }) as SpotifyApi.PlaylistTrackObject
-        );
-        // Same as Spotify: insert at `position`, or append
-        items.splice(position ?? items.length, 0, ...newItems);
+        const hasUnloadedPages = items.length < state.playlist.items.total;
+
+        // Appended after pages not loaded yet: "Load more" will bring it, adding it here would
+        // show it twice
+        if (position !== undefined || !hasUnloadedPages) {
+          const newItems = tracks.map(
+            (track) =>
+              ({
+                item: track
+              }) as SpotifyApi.PlaylistTrackObject
+          );
+          // Same as Spotify: insert at `position`, or append
+          items.splice(position ?? items.length, 0, ...newItems);
+        }
         state.playlist.items.total += tracks.length;
         state.playlist.snapshot_id = snapshotId;
         cacheOpenedPlaylistTracks(state);
@@ -192,6 +220,9 @@ export const {
   getPlaylist,
   getPlaylistSuccess,
   getPlaylistFailed,
+  getMorePlaylistItems,
+  getMorePlaylistItemsSuccess,
+  getMorePlaylistItemsFailed,
   addItemsToPlaylist,
   addItemsToPlaylistSuccess,
   addItemsToPlaylistFailed,
