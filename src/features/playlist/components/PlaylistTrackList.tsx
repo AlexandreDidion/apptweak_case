@@ -5,6 +5,7 @@ import { PlayTrackButton } from "@/components/PlayTrackButton";
 import { TrackLine } from "@/components/TrackLine";
 import { Button } from "@/components/ui/button";
 import { selectUser } from "@/features/auth/selectors";
+import { SortDirection } from "@/lib/sorting";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useReduxMutation } from "@/store/useReduxMutation";
 
@@ -12,6 +13,8 @@ import { RemoveTrackButton } from "../../../components/RemoveTrackButton";
 import { playlistItemTracks } from "../playlistItemTracks";
 import { selectGetMoreItemsRequest, selectRemoveItemsRequest } from "../selectors";
 import { addItemsToPlaylist, getMorePlaylistItems, removeItemsFromPlaylist } from "../slice";
+import { sortTracks } from "../trackSort";
+import { PLAYLIST_ORDER, TrackSortControls, TrackSortOption } from "./TrackSortControls";
 
 interface PlaylistTrackListProps {
   playlist: SpotifyApi.PlaylistObjectFull;
@@ -22,7 +25,15 @@ export function PlaylistTrackList({ playlist }: PlaylistTrackListProps) {
   const user = useAppSelector(selectUser);
 
   const canEdit = playlist.owner.id === user?.userId || playlist.collaborative;
-  const tracks = playlistItemTracks(playlist.items?.items ?? []);
+  const [sortOption, setSortOption] = useState<TrackSortOption>(PLAYLIST_ORDER);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  const playlistTracks = playlistItemTracks(playlist.items?.items ?? []);
+  // Only the loaded pages are sorted: "Load more" can bring tracks that belong higher up
+  const tracks =
+    sortOption === PLAYLIST_ORDER
+      ? playlistTracks
+      : sortTracks(playlistTracks, sortOption, sortDirection);
   const hasMore = !!playlist.items && playlist.items.items.length < playlist.items.total;
 
   const { mutate: loadMore, isPending: isLoadingMore } = useReduxMutation({
@@ -76,6 +87,14 @@ export function PlaylistTrackList({ playlist }: PlaylistTrackListProps) {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <TrackSortControls
+          sortOption={sortOption}
+          direction={sortDirection}
+          onSortOptionChange={setSortOption}
+          onDirectionChange={setSortDirection}
+        />
+      </div>
       <ul>
         {tracks.map((track, index) => (
           <li key={`${track.id}-${index.toString()}`} className="border-t py-2 first:border-t-0">

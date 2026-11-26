@@ -25,7 +25,7 @@ export function MainHeader({ search, userAvatar }: MainHeaderProps) {
         <HouseIcon />
       </Link>
 
-      <div className="w-full max-w-md">{search}</div>
+      <div className="w-full max-w-md md:max-w-xl lg:max-w-2xl">{search}</div>
 
       <div className="flex flex-1 items-center justify-end gap-2">
         <ModeToggle />
