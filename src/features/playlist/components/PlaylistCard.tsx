@@ -10,7 +10,7 @@ interface PlaylistCardProps {
 }
 
 export function PlaylistCard({ playlist }: PlaylistCardProps) {
-  const coverUrls = playlist.images?.map((img) => img.url) || [];
+  const coverUrls = playlist.images.map((img) => img.url);
   const trackCount = playlist.items?.total;
 
   return (

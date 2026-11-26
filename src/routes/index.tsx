@@ -11,10 +11,12 @@ export const Route = createFileRoute("/")({ component: HomePage });
 function HomePage() {
   const user = useAppSelector(selectUser);
 
+  const welcomeMessage = user?.userName ? `Welcome back, ${user.userName} !` : "Welcome back !";
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold text-center">
-        {user ? `Welcome back, ${user.userName} !` : <Disc3Icon className="animate-spin" />}
+        {user ? welcomeMessage : <Disc3Icon className="animate-spin" />}
       </h1>
       <div className="flex justify-center gap-3">
         <Link to="/obsession" className={buttonVariants({ variant: "outline" })}>
