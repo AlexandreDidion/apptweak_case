@@ -62,7 +62,7 @@ export function AddToPlaylistDialog({ track, onClose }: AddToPlaylistDialogProps
   });
 
   const editablePlaylists = playlists.filter(
-    (playlist) => playlist.owner.id === user?.userId || playlist.collaborative
+    (playlist) => playlist.owner.id === user?.id || playlist.collaborative
   );
 
   const playlistNameOptions = Object.fromEntries(

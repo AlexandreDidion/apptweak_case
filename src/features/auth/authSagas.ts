@@ -16,7 +16,8 @@ import {
 import {
   ACCESS_TOKEN_STORAGE_KEY,
   EXPIRES_AT_STORAGE_KEY,
-  REFRESH_TOKEN_STORAGE_KEY} from "@/lib/constants";
+  REFRESH_TOKEN_STORAGE_KEY
+} from "@/lib/constants";
 import { spotifyClient } from "@/lib/spotifyClient";
 
 import {
@@ -52,9 +53,9 @@ export function takeOne<A extends { type: string }, Args extends unknown[]>(
 function* getUserIdSaga(): SagaIterator {
   try {
     const request = () => spotifyClient.get<SpotifyApi.CurrentUsersProfileResponse>("/me");
-    const { data } = (yield call(request)) as SagaReturnType<typeof request>;
+    const { data: user } = (yield call(request)) as SagaReturnType<typeof request>;
 
-    yield put(getUserSuccess({ userId: data.id, userName: data.display_name }));
+    yield put(getUserSuccess(user));
   } catch (error) {
     yield put(getUserFailed({ message: error instanceof Error ? error.message : String(error) }));
   }

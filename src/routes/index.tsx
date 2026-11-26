@@ -11,7 +11,9 @@ export const Route = createFileRoute("/")({ component: HomePage });
 function HomePage() {
   const user = useAppSelector(selectUser);
 
-  const welcomeMessage = user?.userName ? `Welcome back, ${user.userName} !` : "Welcome back !";
+  const welcomeMessage = user?.display_name
+    ? `Welcome back, ${user.display_name} !`
+    : "Welcome back !";
 
   return (
     <div className="space-y-4">

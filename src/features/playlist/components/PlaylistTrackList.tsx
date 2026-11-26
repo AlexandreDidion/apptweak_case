@@ -43,7 +43,7 @@ export function PlaylistTrackList({ playlist }: PlaylistTrackListProps) {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
 
-  const canEdit = playlist.owner.id === user?.userId || playlist.collaborative;
+  const canEdit = playlist.owner.id === user?.id || playlist.collaborative;
   const [sortOption, setSortOption] = useState<TrackSortOption>(PLAYLIST_ORDER);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 

@@ -4,14 +4,9 @@ import { setFailed, setPending, setSuccess } from "@/store/commonReducers";
 import { CommonReduxState } from "@/types/redux";
 import { RequestStatus } from "@/types/requests";
 
-export interface User {
-  userId?: string;
-  userName?: string;
-}
-
 export interface AuthState extends CommonReduxState {
   accessToken?: string;
-  user?: User;
+  user?: SpotifyApi.UserObjectPrivate;
 }
 
 const initialState: AuthState = {
@@ -23,7 +18,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     getUser: setPending,
-    getUserSuccess: (state, action: PayloadAction<User>) => {
+    getUserSuccess: (state, action: PayloadAction<SpotifyApi.UserObjectPrivate>) => {
       setSuccess(state);
       state.user = action.payload;
     },
