@@ -14,7 +14,7 @@ interface MainHeaderProps {
 
 export function MainHeader({ search, userAvatar }: MainHeaderProps) {
   return (
-    <header className="flex h-16 w-full items-center gap-4 bg-card px-4 text-card-foreground shadow-md ring-1 ring-foreground/10">
+    <header className="flex h-16 w-full items-center gap-2 bg-card px-2 sm:gap-4 sm:px-4 text-card-foreground shadow-md ring-1 ring-foreground/10">
       {/* Lives in the header so it stays reachable on mobile, where the sidebar is a closed sheet */}
       <SidebarTrigger className="rounded-full" />
       <Link
@@ -25,9 +25,10 @@ export function MainHeader({ search, userAvatar }: MainHeaderProps) {
         <HouseIcon />
       </Link>
 
-      <div className="w-full max-w-md md:max-w-xl lg:max-w-2xl">{search}</div>
+      {/* min-w-0: lets the search shrink on small screens instead of pushing the rest out */}
+      <div className="min-w-0 flex-1 md:max-w-xl lg:max-w-2xl">{search}</div>
 
-      <div className="flex flex-1 items-center justify-end gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
         <ModeToggle />
         {userAvatar}
       </div>

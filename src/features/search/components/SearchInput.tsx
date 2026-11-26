@@ -1,4 +1,4 @@
-import { Disc3Icon, PlusIcon, SearchIcon } from "lucide-react";
+import { Disc3Icon, GlassesIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { useState } from "react";
 
 import { TrackLine } from "@/components/TrackLine";
@@ -14,6 +14,8 @@ import {
 import { InputGroupAddon } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { RequestStatus } from "@/types/requests";
 
@@ -21,6 +23,8 @@ import { selectSearchQuery, selectSearchState } from "../selectors";
 import { clearSearch, searchTracks } from "../slice";
 
 const HIPSTER_SWITCH_ID = "hipster-search-switch";
+/** Space between the mobile popup and the screen edges (`1rem` in total in its width) */
+const SCREEN_EDGE_GAP = 8;
 
 interface SearchInputProps {
   onTrackSelect?: (track: SpotifyApi.TrackObjectFull) => void;
@@ -30,6 +34,7 @@ interface SearchInputProps {
 export function SearchInput({ onTrackSelect, targetName }: SearchInputProps) {
   const dispatch = useAppDispatch();
   const anchor = useComboboxAnchor();
+  const isMobile = useIsMobile();
   const { status, error, tracks, total } = useAppSelector(selectSearchState);
   const lastQuery = useAppSelector(selectSearchQuery);
 
@@ -76,7 +81,7 @@ export function SearchInput({ onTrackSelect, targetName }: SearchInputProps) {
       }}
     >
       <div className="flex items-center gap-2">
-        <div ref={anchor} className="min-w-0 flex-1">
+        <div ref={anchor} className="min-w-24 flex-1">
           <ComboboxInput
             placeholder={targetName ? `Search tracks to add to "${targetName}"` : "Search tracks"}
             aria-label="Search tracks"
@@ -93,7 +98,7 @@ export function SearchInput({ onTrackSelect, targetName }: SearchInputProps) {
           </ComboboxInput>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 md:gap-2">
           <Switch
             id={HIPSTER_SWITCH_ID}
             checked={isHipsterSearch}
@@ -107,12 +112,21 @@ export function SearchInput({ onTrackSelect, targetName }: SearchInputProps) {
             htmlFor={HIPSTER_SWITCH_ID}
             title="Only little-known results (Spotify's tag:hipster)"
           >
-            Hipster search mode
+            {/* Icon only on small screens: the text would leave no room for the input */}
+            <GlassesIcon className="size-4 md:hidden" aria-hidden="true" />
+            <span className="sr-only md:not-sr-only">Hipster search mode</span>
           </Label>
         </div>
       </div>
 
-      <ComboboxContent anchor={anchor}>
+      <ComboboxContent
+        anchor={anchor}
+        // On mobile the input is narrow: the popup spans the screen instead, 8px from each edge
+        alignOffset={
+          isMobile ? () => SCREEN_EDGE_GAP - (anchor.current?.getBoundingClientRect().left ?? 0) : 0
+        }
+        className={cn(isMobile && "w-[calc(100vw-1rem)] max-w-none min-w-0")}
+      >
         <ComboboxEmpty className="py-4">{emptyMessage()}</ComboboxEmpty>
         <ComboboxList className="max-h-[60vh] overflow-y-auto p-1">
           {(track: SpotifyApi.TrackObjectFull) => (
