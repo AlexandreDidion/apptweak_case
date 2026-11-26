@@ -76,8 +76,7 @@ function PlaylistPage() {
         onOpenChange={setIsEditDialogOpen}
         defaultValues={{
           name: playlist.name,
-          description: playlist.description ?? emptyPlaylistFormValues.description,
-          public: playlist.public ?? emptyPlaylistFormValues.public
+          description: playlist.description ?? emptyPlaylistFormValues.description
         }}
         title="Edit playlist"
         submitLabel="Save"

@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { LockIcon } from "lucide-react";
 
 import { ImageMosaic } from "@/components/ImageMosaic";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,9 +26,6 @@ export function PlaylistCard({ playlist }: PlaylistCardProps) {
         <CardHeader>
           <CardTitle className="truncate">{playlist.name}</CardTitle>
           <CardDescription className="flex items-center gap-1">
-            {playlist.public === false && (
-              <LockIcon className="size-3 shrink-0" aria-label="Private" role="img" />
-            )}
             <span className="truncate">
               {trackCount !== undefined && `${trackCount.toString()} tracks`}
             </span>

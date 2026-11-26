@@ -108,8 +108,7 @@ function* onCreatePlaylist(action: ReturnType<typeof createPlaylist>): SagaItera
     const request = () =>
       spotifyClient.post<SpotifyApi.PlaylistObjectSimplified>("/me/playlists", {
         name: action.payload.name,
-        description: action.payload.description,
-        public: action.payload.public
+        description: action.payload.description
       });
     const { data } = (yield call(request)) as SagaReturnType<typeof request>;
 
@@ -133,8 +132,7 @@ function* onEditPlaylist(action: ReturnType<typeof editPlaylist>): SagaIterator 
           description:
             action.payload.values.description.trim() === ""
               ? " "
-              : action.payload.values.description,
-          public: action.payload.values.public
+              : action.payload.values.description
         }
       );
     (yield call(request)) as SagaReturnType<typeof request>;
