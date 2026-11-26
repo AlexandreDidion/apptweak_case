@@ -12,12 +12,13 @@ import { addItemsToPlaylist, removeItemsFromPlaylist } from "./slice";
  * Adds a track to a playlist, e.g. from the search:
  * - a playlist is open (/playlists/$playlistId): added to it directly.
  *   `targetPlaylistName` is its name, e.g. to tell the user where tracks go
- * - no playlist open: the track waits in `trackToPick`, render <AddToPlaylistDialog> to pick one
+ * - no playlist open: the track waits in `trackToPick`, render <AddToPlaylistDialog> to pick one,
+ *   then `addTrackTo` adds it and closes the dialog
  *
  * Lets other features add tracks without depending on the playlist feature.
  */
 export function useAddTrackToPlaylist() {
-  const { playlistId } = useParams({ strict: false });
+  const { playlistId: openPlaylistId } = useParams({ strict: false });
   const [trackToPick, setTrackToPick] = useState<SpotifyApi.TrackObjectFull | null>(null);
 
   const dispatch = useAppDispatch();
@@ -25,19 +26,19 @@ export function useAddTrackToPlaylist() {
   const openedPlaylist = useAppSelector(selectPlaylist);
 
   // From the sidebar list, or the opened playlist if the list isn't loaded yet
-  const targetPlaylistName = playlistId
-    ? (playlists.find((playlist) => playlist.id === playlistId)?.name ??
-      (openedPlaylist?.id === playlistId ? openedPlaylist.name : undefined))
-    : undefined;
+  const playlistName = (playlistId: string) =>
+    playlists.find((playlist) => playlist.id === playlistId)?.name ??
+    (openedPlaylist?.id === playlistId ? openedPlaylist.name : undefined);
+  const targetPlaylistName = openPlaylistId ? playlistName(openPlaylistId) : undefined;
 
-  // As the hook can be used in different contexts, we keep track of the pending add operation separately
+  // Other code adds tracks too (e.g. Undo after a removal): only toast for the adds made here
   const pendingAddRef = useRef<{
     track: SpotifyApi.TrackObjectFull;
     playlistId: string;
     playlistName?: string;
   } | null>(null);
 
-  const { mutate } = useReduxMutation({
+  const { mutate, isPending } = useReduxMutation({
     action: addItemsToPlaylist,
     selectState: selectAddItemsRequest,
     onSuccess: () => {
@@ -45,6 +46,7 @@ export function useAddTrackToPlaylist() {
       pendingAddRef.current = null;
       if (!added) return;
 
+      setTrackToPick(null);
       toast.success(`Added "${added.track.name}" to "${added.playlistName ?? "the playlist"}"`, {
         action: {
           label: "Undo",
@@ -65,21 +67,29 @@ export function useAddTrackToPlaylist() {
     }
   });
 
-  const addTrack = useCallback(
-    (track: SpotifyApi.TrackObjectFull) => {
-      if (playlistId) {
-        pendingAddRef.current = { track, playlistId, playlistName: targetPlaylistName };
-        mutate({ playlistId, tracks: [track] });
-      } else {
-        setTrackToPick(track);
-      }
-    },
-    [playlistId, targetPlaylistName, mutate]
-  );
+  const addTrackTo = (playlistId: string, track: SpotifyApi.TrackObjectFull) => {
+    pendingAddRef.current = { track, playlistId, playlistName: playlistName(playlistId) };
+    mutate({ playlistId, tracks: [track] });
+  };
+
+  const addTrack = (track: SpotifyApi.TrackObjectFull) => {
+    if (openPlaylistId) {
+      addTrackTo(openPlaylistId, track);
+    } else {
+      setTrackToPick(track);
+    }
+  };
 
   const closePicker = useCallback(() => {
     setTrackToPick(null);
   }, []);
 
-  return { addTrack, trackToPick, closePicker, targetPlaylistName };
+  return {
+    addTrack,
+    addTrackTo,
+    trackToPick,
+    closePicker,
+    targetPlaylistName,
+    isAdding: isPending
+  };
 }

@@ -50,7 +50,7 @@ export function takeOne<A extends { type: string }, Args extends unknown[]>(
   });
 }
 
-function* getUserIdSaga(): SagaIterator {
+function* getUserSaga(): SagaIterator {
   try {
     const request = () => spotifyClient.get<SpotifyApi.CurrentUsersProfileResponse>("/me");
     const { data: user } = (yield call(request)) as SagaReturnType<typeof request>;
@@ -212,7 +212,7 @@ function* periodicRefreshToken() {
 }
 
 export default function* authSaga() {
-  yield takeEvery(getUser.type, getUserIdSaga);
+  yield takeEvery(getUser.type, getUserSaga);
   yield takeOne(getToken.type, getTokenSaga);
   yield takeEvery(login.type, loginSaga);
   yield takeLatest(getTokenSuccess.type, periodicRefreshToken);

@@ -11,6 +11,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { PlayTrackButton } from "@/components/PlayTrackButton";
+import { RemoveTrackButton } from "@/components/RemoveTrackButton";
 import { TrackLine } from "@/components/TrackLine";
 import { Button } from "@/components/ui/button";
 import { selectUser } from "@/features/auth/selectors";
@@ -18,7 +19,6 @@ import { sortBy, SortDirection } from "@/lib/sorting";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useReduxMutation } from "@/store/useReduxMutation";
 
-import { RemoveTrackButton } from "../../../components/RemoveTrackButton";
 import { playlistTrackEntries } from "../playlistItemTracks";
 import {
   selectGetMoreItemsRequest,

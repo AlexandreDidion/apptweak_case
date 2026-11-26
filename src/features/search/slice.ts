@@ -22,10 +22,7 @@ const searchSlice = createSlice({
   name: "search",
   initialState,
   reducers: {
-    searchTracks: (
-      state,
-      action: PayloadAction<{ query: string; type?: string; isHipsterSearch?: boolean }>
-    ) => {
+    searchTracks: (state, action: PayloadAction<{ query: string; isHipsterSearch?: boolean }>) => {
       setPending(state);
       state.query = action.payload.query;
     },

@@ -7,8 +7,6 @@ import { clearSearch, searchTracks, searchTracksFailed, searchTracksSuccess } fr
 
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_LIMIT = 10;
-// Only search for tracks by default
-const ITEM_TYPE = "track";
 
 /**
  * Spotify filters are written inside `q`, e.g. "miles tag:hipster", not sent as URL params.
@@ -19,7 +17,6 @@ export function buildSearchQuery(query: string, { isHipsterSearch = false } = {}
 
 function* onSearchTracks(action: ReturnType<typeof searchTracks>): SagaIterator {
   const query = action.payload.query.trim();
-  const type = action.payload.type ?? ITEM_TYPE;
   const isHipsterSearch = action.payload.isHipsterSearch ?? false;
 
   if (!query) {
@@ -33,7 +30,7 @@ function* onSearchTracks(action: ReturnType<typeof searchTracks>): SagaIterator 
 
   const params = {
     q: buildSearchQuery(query, { isHipsterSearch }),
-    type: type,
+    type: "track",
     limit: SEARCH_LIMIT
   };
 

@@ -1,5 +1,4 @@
-import { useRef, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -21,45 +20,23 @@ import {
 } from "@/components/ui/select";
 import { selectUser } from "@/features/auth/selectors";
 import { useAppSelector } from "@/store/hooks";
-import { useReduxMutation } from "@/store/useReduxMutation";
 
-import { selectAddItemsRequest, selectPlaylists } from "../selectors";
-import { addItemsToPlaylist } from "../slice";
+import { selectPlaylists } from "../selectors";
 
 const SELECT_ID = "add-to-playlist-select";
 
 interface AddToPlaylistDialogProps {
   track: SpotifyApi.TrackObjectFull | null;
+  isAdding: boolean;
+  onAdd: (playlistId: string, track: SpotifyApi.TrackObjectFull) => void;
   onClose: () => void;
 }
 
-export function AddToPlaylistDialog({ track, onClose }: AddToPlaylistDialogProps) {
+export function AddToPlaylistDialog({ track, isAdding, onAdd, onClose }: AddToPlaylistDialogProps) {
   const user = useAppSelector(selectUser);
   const playlists = useAppSelector(selectPlaylists);
 
   const [playlistId, setPlaylistId] = useState<string | null>(null);
-
-  const isAddingFromDialogRef = useRef(false);
-  const addMutation = useReduxMutation({
-    action: addItemsToPlaylist,
-    selectState: selectAddItemsRequest,
-    onSuccess: () => {
-      if (!isAddingFromDialogRef.current) return;
-
-      isAddingFromDialogRef.current = false;
-
-      if (track && playlistId) {
-        toast.success(
-          `Added "${track.name}" to "${playlistNameOptions[playlistId] ?? "the playlist"}"`
-        );
-      }
-
-      close();
-    },
-    onError: () => {
-      isAddingFromDialogRef.current = false;
-    }
-  });
 
   const editablePlaylists = playlists.filter(
     (playlist) => playlist.owner.id === user?.id || playlist.collaborative
@@ -69,16 +46,11 @@ export function AddToPlaylistDialog({ track, onClose }: AddToPlaylistDialogProps
     editablePlaylists.map((playlist) => [playlist.id, playlist.name])
   );
 
-  function close() {
-    setPlaylistId(null);
-    onClose();
-  }
-
   return (
     <Dialog
       open={track !== null}
       onOpenChange={(isOpen) => {
-        if (!isOpen) close();
+        if (!isOpen) onClose();
       }}
     >
       <DialogContent>
@@ -106,7 +78,6 @@ export function AddToPlaylistDialog({ track, onClose }: AddToPlaylistDialogProps
                 ))}
               </SelectContent>
             </Select>
-            {addMutation.isError && <FieldError>{addMutation.error}</FieldError>}
           </Field>
         )}
 
@@ -114,12 +85,9 @@ export function AddToPlaylistDialog({ track, onClose }: AddToPlaylistDialogProps
           <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
           <Button
             disabled={!playlistId}
-            isLoading={addMutation.isPending}
+            isLoading={isAdding}
             onClick={() => {
-              if (!track || !playlistId) return;
-
-              isAddingFromDialogRef.current = true;
-              addMutation.mutate({ playlistId, tracks: [track] });
+              if (track && playlistId) onAdd(playlistId, track);
             }}
           >
             Add

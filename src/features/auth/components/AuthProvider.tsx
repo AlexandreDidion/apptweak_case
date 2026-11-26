@@ -1,48 +1,40 @@
-import { FC, ReactNode, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { ReactNode, useEffect } from "react";
 
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { RequestStatus } from "@/types/requests";
 
-import { selectAccessToken, selectAuthStatus } from "../selectors";
-import { getToken, getUser, login, setAccessToken } from "../slice";
+import { selectAccessToken, selectAuthStatus, selectUser } from "../selectors";
+import { getToken, getUser, login } from "../slice";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-const AuthProvider: FC<AuthProviderProps> = ({ children }: AuthProviderProps) => {
-  const dispatch = useDispatch();
-  const authenticationStatus = useSelector(selectAuthStatus);
-  const accessToken = useSelector(selectAccessToken);
+export default function AuthProvider({ children }: AuthProviderProps) {
+  const dispatch = useAppDispatch();
+  const authenticationStatus = useAppSelector(selectAuthStatus);
+  const accessToken = useAppSelector(selectAccessToken);
+  const user = useAppSelector(selectUser);
 
-  const { location } = window;
-  const urlParams = new URLSearchParams(location.search);
-  const code = urlParams.get("code");
+  const code = new URLSearchParams(window.location.search).get("code");
 
   useEffect(() => {
-    if (!code && !accessToken) {
-      dispatch(login());
-    }
-    if (code && !accessToken) {
-      dispatch(getToken(code));
-    }
     if (accessToken) {
-      dispatch(setAccessToken(accessToken));
       dispatch(getUser());
+    } else if (code) {
+      dispatch(getToken(code));
+    } else {
+      dispatch(login());
     }
   }, [code, accessToken, dispatch]);
 
-  if (authenticationStatus === RequestStatus.SUCCESS) return <>{children}</>;
-  if (authenticationStatus === RequestStatus.ERROR)
-    return (
-      <div className="App">
-        <header className="App-header">
-          <p>Authentication failed. Please check the console for more info.</p>
-        </header>
-      </div>
-    );
+  // Waits for the user, not just the token: getUser sets the shared status back to pending,
+  // which would unmount the app (and refetch everything) if it was already rendered
+  if (user) return <>{children}</>;
+
+  if (authenticationStatus === RequestStatus.ERROR) {
+    return <p className="p-4">Authentication failed. Please check the console for more info.</p>;
+  }
 
   return null;
-};
-
-export default AuthProvider;
+}

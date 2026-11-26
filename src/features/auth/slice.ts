@@ -23,9 +23,6 @@ const authSlice = createSlice({
       state.user = action.payload;
     },
     getUserFailed: setFailed,
-    setAccessToken: (state, action: PayloadAction<string>) => {
-      state.accessToken = action.payload;
-    },
     getToken: (state, _action: PayloadAction<string>) => {
       setPending(state);
     },
@@ -44,7 +41,6 @@ export const {
   getUser,
   getUserSuccess,
   getUserFailed,
-  setAccessToken,
   getToken,
   getTokenSuccess,
   getTokenFailed,

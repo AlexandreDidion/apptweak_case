@@ -12,7 +12,8 @@ import { SearchInput } from "@/features/search/components/SearchInput";
 export const Route = createRootRoute({ component: RootLayout });
 
 function RootLayout() {
-  const { addTrack, trackToPick, closePicker, targetPlaylistName } = useAddTrackToPlaylist();
+  const { addTrack, addTrackTo, trackToPick, closePicker, targetPlaylistName, isAdding } =
+    useAddTrackToPlaylist();
 
   return (
     // --header-height (h-16 = 4rem) lets the fixed sidebar start below the header
@@ -29,7 +30,12 @@ function RootLayout() {
           <Outlet />
         </SidebarInset>
       </div>
-      <AddToPlaylistDialog track={trackToPick} onClose={closePicker} />
+      <AddToPlaylistDialog
+        track={trackToPick}
+        isAdding={isAdding}
+        onAdd={addTrackTo}
+        onClose={closePicker}
+      />
       <Toaster />
     </SidebarProvider>
   );
