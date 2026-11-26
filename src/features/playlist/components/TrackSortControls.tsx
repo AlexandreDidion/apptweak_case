@@ -17,7 +17,7 @@ export const PLAYLIST_ORDER = "playlistOrder";
 export type TrackSortOption = TrackSortField | typeof PLAYLIST_ORDER;
 
 const SORT_OPTION_LABELS: Record<TrackSortOption, string> = {
-  [PLAYLIST_ORDER]: "Playlist sorting",
+  [PLAYLIST_ORDER]: "Default sorting",
   ...Object.fromEntries(
     Object.entries(TRACK_SORT_FIELDS).map(([field, { label }]) => [field, label])
   )

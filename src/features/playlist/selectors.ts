@@ -18,6 +18,7 @@ export const selectGetMoreItemsRequest = (state: RootState) => state.playlist.ge
 export const selectEditPlaylistRequest = (state: RootState) => state.playlist.editRequest;
 export const selectAddItemsRequest = (state: RootState) => state.playlist.addItemsRequest;
 export const selectRemoveItemsRequest = (state: RootState) => state.playlist.removeItemsRequest;
+export const selectReorderItemsRequest = (state: RootState) => state.playlist.reorderItemsRequest;
 
 /** Tracks of the playlists opened during the session, by playlist id */
 export const selectTracksByPlaylistId = createSelector(

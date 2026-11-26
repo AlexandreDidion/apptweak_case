@@ -1,4 +1,4 @@
-import { sortBy, SortDirection, SortValue } from "@/lib/sorting";
+import { SortValue } from "@/lib/sorting";
 
 interface SortField {
   label: string;
@@ -15,12 +15,3 @@ export const TRACK_SORT_FIELDS = {
 } satisfies Record<string, SortField>;
 
 export type TrackSortField = keyof typeof TRACK_SORT_FIELDS;
-
-/** A sorted copy of the tracks. Equal tracks keep their playlist order */
-export function sortTracks(
-  tracks: SpotifyApi.TrackObjectFull[],
-  field: TrackSortField,
-  direction: SortDirection
-): SpotifyApi.TrackObjectFull[] {
-  return sortBy(tracks, TRACK_SORT_FIELDS[field].value, direction);
-}

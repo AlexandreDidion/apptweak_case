@@ -1,3 +1,12 @@
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -5,15 +14,25 @@ import { PlayTrackButton } from "@/components/PlayTrackButton";
 import { TrackLine } from "@/components/TrackLine";
 import { Button } from "@/components/ui/button";
 import { selectUser } from "@/features/auth/selectors";
-import { SortDirection } from "@/lib/sorting";
+import { sortBy, SortDirection } from "@/lib/sorting";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useReduxMutation } from "@/store/useReduxMutation";
 
 import { RemoveTrackButton } from "../../../components/RemoveTrackButton";
-import { playlistItemTracks } from "../playlistItemTracks";
-import { selectGetMoreItemsRequest, selectRemoveItemsRequest } from "../selectors";
-import { addItemsToPlaylist, getMorePlaylistItems, removeItemsFromPlaylist } from "../slice";
-import { sortTracks } from "../trackSort";
+import { playlistTrackEntries } from "../playlistItemTracks";
+import {
+  selectGetMoreItemsRequest,
+  selectRemoveItemsRequest,
+  selectReorderItemsRequest
+} from "../selectors";
+import {
+  addItemsToPlaylist,
+  getMorePlaylistItems,
+  removeItemsFromPlaylist,
+  reorderPlaylistItems
+} from "../slice";
+import { TRACK_SORT_FIELDS } from "../trackSort";
+import { SortableTrackItem } from "./SortableTrackItem";
 import { PLAYLIST_ORDER, TrackSortControls, TrackSortOption } from "./TrackSortControls";
 
 interface PlaylistTrackListProps {
@@ -28,12 +47,18 @@ export function PlaylistTrackList({ playlist }: PlaylistTrackListProps) {
   const [sortOption, setSortOption] = useState<TrackSortOption>(PLAYLIST_ORDER);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  const playlistTracks = playlistItemTracks(playlist.items?.items ?? []);
+  const playlistEntries = playlistTrackEntries(playlist.items?.items ?? []);
   // Only the loaded pages are sorted: "Load more" can bring tracks that belong higher up
-  const tracks =
+  const entries =
     sortOption === PLAYLIST_ORDER
-      ? playlistTracks
-      : sortTracks(playlistTracks, sortOption, sortDirection);
+      ? playlistEntries
+      : sortBy(
+          playlistEntries,
+          (entry) => TRACK_SORT_FIELDS[sortOption].value(entry.track),
+          sortDirection
+        );
+  // Dragging only makes sense in the playlist's own order
+  const canReorder = canEdit && sortOption === PLAYLIST_ORDER;
   const hasMore = !!playlist.items && playlist.items.items.length < playlist.items.total;
 
   const { mutate: loadMore, isPending: isLoadingMore } = useReduxMutation({
@@ -43,6 +68,31 @@ export function PlaylistTrackList({ playlist }: PlaylistTrackListProps) {
       toast.error("Could not load more tracks", { description: error });
     }
   });
+
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const { mutate: reorder } = useReduxMutation({
+    action: reorderPlaylistItems,
+    selectState: selectReorderItemsRequest,
+    onError: (error) => {
+      toast.error("Could not move the track", { description: error });
+    }
+  });
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const from = entries.findIndex((entry) => entry.id === active.id);
+    const to = entries.findIndex((entry) => entry.id === over.id);
+
+    // Spotify's positions, not indexes in `entries`: hidden items (episodes…) count too
+    const targetPosition = entries[to].position;
+    reorder({
+      playlistId: playlist.id,
+      rangeStart: entries[from].position,
+      // Moving down: goes after the target, so before the item that follows it
+      insertBefore: to > from ? targetPosition + 1 : targetPosition
+    });
+  };
 
   const [removal, setRemoval] = useState<{
     track: SpotifyApi.TrackObjectFull;
@@ -81,7 +131,7 @@ export function PlaylistTrackList({ playlist }: PlaylistTrackListProps) {
     }
   });
 
-  if (tracks.length === 0 && !hasMore) {
+  if (entries.length === 0 && !hasMore) {
     return <p>No tracks yet.</p>;
   }
 
@@ -95,35 +145,39 @@ export function PlaylistTrackList({ playlist }: PlaylistTrackListProps) {
           onDirectionChange={setSortDirection}
         />
       </div>
-      <ul>
-        {tracks.map((track, index) => (
-          <li key={`${track.id}-${index.toString()}`} className="border-t py-2 first:border-t-0">
-            <TrackLine
-              track={track}
-              actions={
-                <>
-                  {canEdit && (
-                    <RemoveTrackButton
-                      track={track}
-                      isRemoving={removal?.track.uri === track.uri}
-                      onRemove={() => {
-                        // Indexes in the playlist's items (Spotify's positions), not in `tracks`
-                        const positions = (playlist.items?.items ?? []).flatMap(
-                          (playlistItem, i) => (playlistItem.item?.uri === track.uri ? [i] : [])
-                        );
-                        setRemoval({ track, positions });
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={entries} strategy={verticalListSortingStrategy}>
+          <ul>
+            {entries.map(({ id, track }) => (
+              <SortableTrackItem key={id} id={id} isReorderable={canReorder} trackName={track.name}>
+                <TrackLine
+                  track={track}
+                  actions={
+                    <>
+                      {canEdit && (
+                        <RemoveTrackButton
+                          track={track}
+                          isRemoving={removal?.track.uri === track.uri}
+                          onRemove={() => {
+                            // Indexes in the playlist's items (Spotify's positions), not in `tracks`
+                            const positions = (playlist.items?.items ?? []).flatMap(
+                              (playlistItem, i) => (playlistItem.item?.uri === track.uri ? [i] : [])
+                            );
+                            setRemoval({ track, positions });
 
-                        removeItems({ playlistId: playlist.id, uris: [track.uri] });
-                      }}
-                    />
-                  )}
-                  <PlayTrackButton track={track} />
-                </>
-              }
-            />
-          </li>
-        ))}
-      </ul>
+                            removeItems({ playlistId: playlist.id, uris: [track.uri] });
+                          }}
+                        />
+                      )}
+                      <PlayTrackButton track={track} />
+                    </>
+                  }
+                />
+              </SortableTrackItem>
+            ))}
+          </ul>
+        </SortableContext>
+      </DndContext>
       {hasMore && (
         <div className="flex justify-center">
           <Button

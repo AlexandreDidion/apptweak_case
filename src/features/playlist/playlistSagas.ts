@@ -1,9 +1,12 @@
-import { SagaIterator } from "redux-saga";
+import { Channel, SagaIterator } from "redux-saga";
 import {
+  actionChannel,
   call,
+  fork,
   put,
   SagaReturnType,
   select,
+  take,
   takeEvery,
   takeLatest,
   takeLeading
@@ -34,7 +37,10 @@ import {
   getPlaylistSuccess,
   removeItemsFromPlaylist,
   removeItemsFromPlaylistFailed,
-  removeItemsFromPlaylistSuccess
+  removeItemsFromPlaylistSuccess,
+  reorderPlaylistItems,
+  reorderPlaylistItemsFailed,
+  reorderPlaylistItemsSuccess
 } from "./slice";
 
 function* fetchPlaylists(): SagaIterator {
@@ -185,6 +191,45 @@ function* onRemoveItemsFromPlaylist(
   }
 }
 
+function* onReorderPlaylistItems(action: ReturnType<typeof reorderPlaylistItems>): SagaIterator {
+  const { playlistId, rangeStart, insertBefore } = action.payload;
+  try {
+    const request = () =>
+      spotifyClient.put<SpotifyApi.ReorderPlaylistTracksResponse>(
+        `/playlists/${playlistId}/items`,
+        {
+          range_start: rangeStart,
+          insert_before: insertBefore,
+          range_length: 1
+        }
+      );
+    const { data } = (yield call(request)) as SagaReturnType<typeof request>;
+
+    yield put(reorderPlaylistItemsSuccess({ playlistId, snapshotId: data.snapshot_id }));
+  } catch (error) {
+    yield put(
+      reorderPlaylistItemsFailed({
+        message: error instanceof Error ? error.message : String(error),
+        move: action.payload
+      })
+    );
+  }
+}
+
+/**
+ * One reorder at a time, in order: positions only make sense once the previous move is applied,
+ * so concurrent requests could put tracks in the wrong place
+ */
+function* watchReorderPlaylistItems(): SagaIterator {
+  const channel = (yield actionChannel(reorderPlaylistItems.type)) as Channel<
+    ReturnType<typeof reorderPlaylistItems>
+  >;
+  while (true) {
+    const action = (yield take(channel)) as ReturnType<typeof reorderPlaylistItems>;
+    yield call(onReorderPlaylistItems, action);
+  }
+}
+
 export default function* playlistSaga() {
   yield takeLatest(getPlaylists.type, fetchPlaylists);
   yield takeEvery(createPlaylist.type, onCreatePlaylist);
@@ -194,4 +239,5 @@ export default function* playlistSaga() {
   yield takeLeading(getMorePlaylistItems.type, fetchMorePlaylistItems);
   yield takeEvery(addItemsToPlaylist.type, onAddItemsToPlaylist);
   yield takeEvery(removeItemsFromPlaylist.type, onRemoveItemsFromPlaylist);
+  yield fork(watchReorderPlaylistItems);
 }

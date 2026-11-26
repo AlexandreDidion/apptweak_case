@@ -16,12 +16,20 @@ export interface PlaylistState extends CommonReduxState {
   editRequest: CommonReduxState;
   addItemsRequest: CommonReduxState;
   removeItemsRequest: CommonReduxState;
+  reorderItemsRequest: CommonReduxState;
   /**
    * Tracks of every playlist opened during the session, so other features (e.g. the naughty
    * list) can use them without new requests. Kept up to date by the add/remove reducers
    */
   // Partial: a playlist has no entry until it's opened
   tracksByPlaylistId: Partial<Record<string, SpotifyApi.TrackObjectFull[]>>;
+}
+
+/** Same arguments as Spotify: moves the item at `rangeStart` before the one at `insertBefore` */
+interface PlaylistItemMove {
+  playlistId: string;
+  rangeStart: number;
+  insertBefore: number;
 }
 
 interface PlaylistItemsChange {
@@ -39,6 +47,7 @@ const initialState: PlaylistState = {
   editRequest: { status: RequestStatus.IDLE },
   addItemsRequest: { status: RequestStatus.IDLE },
   removeItemsRequest: { status: RequestStatus.IDLE },
+  reorderItemsRequest: { status: RequestStatus.IDLE },
   tracksByPlaylistId: {}
 };
 
@@ -46,6 +55,28 @@ const initialState: PlaylistState = {
 function cacheOpenedPlaylistTracks(state: PlaylistState) {
   if (!state.playlist?.items) return;
   state.tracksByPlaylistId[state.playlist.id] = playlistItemTracks(state.playlist.items.items);
+}
+
+/** Moves an item of the open playlist, like Spotify does */
+function moveOpenPlaylistItem(state: PlaylistState, move: PlaylistItemMove) {
+  if (state.playlist?.id !== move.playlistId || !state.playlist.items) return;
+
+  const items = state.playlist.items.items;
+  const [movedItem] = items.splice(move.rangeStart, 1);
+  // `insertBefore` counts the moved item: one less once it's taken out
+  const newIndex = move.insertBefore > move.rangeStart ? move.insertBefore - 1 : move.insertBefore;
+  items.splice(newIndex, 0, movedItem);
+  cacheOpenedPlaylistTracks(state);
+}
+
+/** The move that puts the item back where it was */
+function undoMove(move: PlaylistItemMove): PlaylistItemMove {
+  const newIndex = move.insertBefore > move.rangeStart ? move.insertBefore - 1 : move.insertBefore;
+  return {
+    playlistId: move.playlistId,
+    rangeStart: newIndex,
+    insertBefore: newIndex < move.rangeStart ? move.rangeStart + 1 : move.rangeStart
+  };
 }
 
 /** Keeps the track count of the playlist in the list (sidebar, cards) in sync */
@@ -203,6 +234,24 @@ const playlistSlice = createSlice({
     },
     removeItemsFromPlaylistFailed: (state, action: PayloadAction<ErrorPayload>) => {
       setFailed(state.removeItemsRequest, action);
+    },
+    /** Optimistic: moved right away, so the dragged track doesn't jump back while saving */
+    reorderPlaylistItems: (state, action: PayloadAction<PlaylistItemMove>) => {
+      setPending(state.reorderItemsRequest);
+      moveOpenPlaylistItem(state, action.payload);
+    },
+    reorderPlaylistItemsSuccess: (state, action: PayloadAction<PlaylistItemsChange>) => {
+      setSuccess(state.reorderItemsRequest);
+      if (state.playlist?.id === action.payload.playlistId) {
+        state.playlist.snapshot_id = action.payload.snapshotId;
+      }
+    },
+    reorderPlaylistItemsFailed: (
+      state,
+      action: PayloadAction<ErrorPayload & { move: PlaylistItemMove }>
+    ) => {
+      setFailed(state.reorderItemsRequest, action);
+      moveOpenPlaylistItem(state, undoMove(action.payload.move));
     }
   }
 });
@@ -228,7 +277,10 @@ export const {
   addItemsToPlaylistFailed,
   removeItemsFromPlaylist,
   removeItemsFromPlaylistSuccess,
-  removeItemsFromPlaylistFailed
+  removeItemsFromPlaylistFailed,
+  reorderPlaylistItems,
+  reorderPlaylistItemsSuccess,
+  reorderPlaylistItemsFailed
 } = playlistSlice.actions;
 
 export default playlistSlice.reducer;
